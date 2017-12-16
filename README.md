@@ -25,19 +25,10 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
-| 0.5 | 15.12.2017 | [-] Added OSX support for load options
-                     [-] Added extra load options (Weld UVs, Clean, Detach Flipped UVs)
-                     [-] Added checker for export from local view (is not supported)
-                     [-] Added Automation, automatic packing and automatic save and return
-                     [-] Added hotkeys for popup menu (for clean workflow)
-                     [-] Added hotkeys to add-on panel for quick acces
-                     [-] Added Quick Export shortcut (quick exports according to last settings)
-                     [-] Added add-on preferences saving options. On restart all settings will be loaded
-                     [-] Added custom export folder. Useful for when errors occur and file needs to be saved, quick access to files.
-| 0.4 | 07.12.2017 | [-] Added create backup when ‘Apply Modifier’ is added.
-                     [-] Added option to export all visible objects, hidden and layers OFF won’t be exported.
-| 0.3 | 05.12.2017 | [-] Added Apply modifier option
-| 0.1 | 15.12.2017 | [-] First official release. By Titus Lavrov
+| 0.5 | 15.12.2017 | • Added OSX support for load options <br>• Added extra load options (Weld UVs, Clean, Detach Flipped UVs)<br>• Added checker for export from local view (is not supported)<br>• Added Automation, automatic packing and automatic save and return<br>• Added hotkeys for popup menu (for clean workflow)<br>• Added hotkeys to add-on panel for quick acces<br>• Added Quick Export shortcut (quick exports according to last settings)<br>• Added add-on preferences saving options. On restart all settings will be loaded<br>• Added custom export folder. Useful for when errors occur and file needs to be saved, quick access to files.
+| 0.4 | 07.12.2017 | • Added create backup when ‘Apply Modifier’ is added. <br>• Added option to export all visible objects, hidden and layers OFF won’t be exported.
+| 0.3 | 05.12.2017 | • Added Apply modifier option
+| 0.1 | 15.12.2017 | • First official release. By Titus Lavrov
 
 - Fill in data
     -
