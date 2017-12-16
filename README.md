@@ -50,6 +50,6 @@ First official release. By Titus Lavrov
     -
 
 ## Offical Blender Artist Thread
-This is the [BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge) where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized of OSX
+This is the [BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge) where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized for OSX
 
 Copyright (C) 2017
