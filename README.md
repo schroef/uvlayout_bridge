@@ -12,11 +12,11 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 
 ## System Requirements
 
-| **OS** | **Version** |
-| ------------- | ------------- |
-| Windows | Vista/7/8/10 |
-| MacOSX | 10.6 > |
-| Linux | OpenGL / GTK2 |
+| **OS** | **Blender** | **UVlayout** |
+| ------------- | ------------- | ------------- |
+| OSX | Blender 2.78 | All Versions |
+| Windows | Blender 2.78 | All Versions |
+| Linux | Not Tested | Not Tested |
 
 
 # Installation Process
