@@ -25,6 +25,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
+| 0.6 | 16.12.2017 | • Updated set config file, errors occurred with custom path. <br>• Updated WM call menu, now resizes when automation is checked.
 | 0.5 | 15.12.2017 | • Added OSX support for load options <br>• Added extra load options (Weld UVs, Clean, Detach Flipped UVs)<br>• Added checker for export from local view (is not supported)<br>• Added Automation, automatic packing and automatic save and return<br>• Added hotkeys for popup menu (for clean workflow)<br>• Added hotkeys to add-on panel for quick acces<br>• Added Quick Export shortcut (quick exports according to last settings)<br>• Added add-on preferences saving options. On restart all settings will be loaded<br>• Added custom export folder. Useful for when errors occur and file needs to be saved, quick access to files.
 | 0.4 | 07.12.2017 | • Added create backup when ‘Apply Modifier’ is added. <br>• Added option to export all visible objects, hidden and layers OFF won’t be exported.
 | 0.3 | 05.12.2017 | • Added Apply modifier option

@@ -1,5 +1,8 @@
 ChangeLog
 ---------
+Version 0.6:
+- Updated set config file, errors occurred with custom path
+- Updated WM call menu, now resizes when automation is checked
 
 Version 0.5:
 - Added OSX support for load options

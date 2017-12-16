@@ -2,7 +2,9 @@
 #
 #   V Get arguments working on OSX
 #   - Get localview export working (not supported)
-#
+#   - Fix custom path and preload, with old scene opened wrong paths are used.
+#     It uses the path from file for export and path for import fro ini. Add extra update for path on EXport
+#   - Try scene without getConfig this is not needed as enum already loads settings
 ####################
 
 bl_info = {
@@ -10,7 +12,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > TOOLS > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 5),
+    "version": (0, 6),
     "blender": (2, 78, 0),
 #    "wiki_url": "https://gumroad.com/l/Blender2UVLayoutBridge",
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
@@ -40,25 +42,26 @@ configFol = "config"
 version = "Please choose version"
 
 #-- LOAD / SET CONFIG FILE  --#
-def getConfig():
-    '''Load configuration to the file
+def setConfig(self, context):
+    '''Save Custom Path in config file when property is updated
+
+        :param context: context
     '''
-    config = SafeConfigParser()
+    customPath = getattr(context.scene, "uvlb_customPath", "")
+    pathEnable = getattr(context.scene, "uvlb_pathEnable", False)
+    winPath = getattr(context.scene, "uvlb_winPath", "")
+    config = configparser.ConfigParser()
+    configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), configFol + "/config.ini")
+    print("UVlayout-Bridge: %s // %s // %s" % (customPath, pathEnable, winPath))
+    config.read(configPath)
+    if not config.has_section("main"):
+        config.add_section('main')
+    config.set('main', 'customPath', str(customPath))
+    config.set('main', 'pathEnable', str(pathEnable))
+    config.set('main', 'winPath', str(winPath))
+    with open(configPath, 'w') as configfile:
+        config.write(configfile)
 
-    for path in bpy.utils.script_paths():
-        ConfigFile = os.path.join(path,"addons","uvlayout_bridge/", configFol + "/config.ini")
-        if os.path.exists(ConfigFile):
-            config.read(ConfigFile)
-            try:
-#                versionUVL = config.getstring('main', 'versionUVL')
-                bpy.context.scene.versionUVL = config.get('main', 'version')
-                bpy.context.scene.uvlb_customPath = config.get('main', 'customPath')
-                bpy.context.scene.uvlb_pathEnable = config.getboolean('main', 'pathEnable')
-                bpy.context.scene.uvlb_winPath = config.get('main', 'winPath')
-            except:
-                version = "Please choose version"
-
-getConfig()
 
 def getVersionUVL():
     '''get UVlayout version from configuration file
@@ -79,22 +82,6 @@ def getVersionUVL():
             except:
                 version = "Please choose version"
     return version
-
-def versionUVLUpdated(self, context):
-    '''Save UVlayout version in config file when property is updated
-
-        :param context: context
-    '''
-    version = getattr(context.scene, "versionUVL", "Pro")
-    config = configparser.ConfigParser()
-    configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), configFol + "/config.ini")
-    print("UVlayout-Bridge: %s // %s" % (version, configPath))
-    config.read(configPath)
-    if not config.has_section("main"):
-        config.add_section('main')
-    config.set('main', 'version', str(version))
-    with open(configPath, 'w') as configfile:
-        config.write(configfile)
 
 def getCustomPath():
     '''get Custom Path version from configuration file
@@ -123,26 +110,6 @@ def getCustomPath():
 
     return (customPath, pathEnable, winPath)
 
-def customPathUpdated(self, context):
-    '''Save Custom Path in config file when property is updated
-
-        :param context: context
-    '''
-    customPath = getattr(context.scene, "uvlb_customPath", "")
-    pathEnable = getattr(context.scene, "uvlb_pathEnable", False)
-    winPath = getattr(context.scene, "uvlb_winPath", "")
-    config = configparser.ConfigParser()
-    configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), configFol + "/config.ini")
-    print("UVlayout-Bridge: %s // %s // %s" % (customPath, pathEnable, winPath))
-    config.read(configPath)
-    if not config.has_section("main"):
-        config.add_section('main')
-    config.set('main', 'customPath', str(customPath))
-    config.set('main', 'pathEnable', str(pathEnable))
-    config.set('main', 'winPath', str(winPath))
-    with open(configPath, 'w') as configfile:
-        config.write(configfile)
-
 
 
 BoolProperty= bpy.types.BoolProperty
@@ -153,20 +120,20 @@ scn.uvlb_customPath = bpy.props.StringProperty(
     name="Custom Export Path",
     description = "Choose custom path instead of temp directory.",
     default = getCustomPath()[0],
-    update = customPathUpdated)
+    update = setConfig)
 
 scn.uvlb_pathEnable = bpy.props.BoolProperty(
     name="Path Enable",
     description = "Choose custom path instead of temp",
     default = getCustomPath()[1],
-    update = customPathUpdated)
+    update = setConfig)
 
 scn.uvlb_winPath = bpy.props.StringProperty(
     name="Path",
     description = "Choose custom path to Headus UVlayout application",
     default = getCustomPath()[2],
     subtype = 'DIR_PATH',
-    update = customPathUpdated)
+    update = setConfig)
 
 
 
@@ -176,7 +143,7 @@ scn.versionUVL = bpy.props.EnumProperty(
     name = "UVlayout Version",
     description = "Set UVlayout Version, needed for startin correct application",
     default = getVersionUVL(),
-    update = versionUVLUpdated)
+    update = setConfig)
 
 def updateIcon(self, context):
     scn = bpy.types.Scene
@@ -468,6 +435,7 @@ def UVL_IO():
 
 
     #---EXPORT---
+    print("Export path: %s - File:%s" % (path, file_Name))
     bpy.ops.export_scene.obj(filepath=path + file_Name,
                                 check_existing = True,
                                 axis_forward = 'Y',
@@ -616,6 +584,7 @@ def UVL_IO():
 #        time.sleep(3)
 
         #-- IMPORT OBJ BACK TO BLENDER --
+#        print("Import path: %s - File:%s" % (path, file_Name))
         if os.path.isfile(path + file_outName) == True:
 #            time.sleep(1)
             bpy.ops.import_scene.obj(filepath = path + file_outName,
@@ -845,6 +814,9 @@ class VIEW3D_MT_UVlayoutBridge_Menu(Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+
+    def check(self, context):
+        return True
 
     @classmethod
     def poll(cls, context):
