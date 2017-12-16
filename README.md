@@ -2,10 +2,21 @@
 
 >A bridge between Blender and Headus UVlayout for quick UVs unwrapping
 
-Headus UVlayout Bridge is a [Blender](https://www.blender.org) add-on for quick exporting objects from Blender to UVlayout for quick and fats UVunwrapping.
-This addon requires [Headus UVlayout](https://www.uvlayout.com/) installed on the OS (OSX - Windows).
+Headus UVlayout Bridge is a [Blender](https://www.blender.org) add-on for exporting objects from Blender to Headus UVlayout for either quick uvwrapping. Its has multiple options and automation possibilities
+
+This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed on the system.
+
 
 ![Header Image](https://github.com/schroef/uvlayout_bridge/blob/master/wiki/images/suzanne-header-image.jpg)
+
+
+## System Requirements
+
+| **OS** | **Version** |
+| ------------- | ------------- |
+| Windows | Vista/7/8/10 |
+| MacOSX | 10.6 > |
+| Linux | OpenGL / GTK2 |
 
 
 # Installation Process
