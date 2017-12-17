@@ -14,7 +14,7 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 2. If you downloaded the zip file.
 3. Open Blender.
 4. Go to File -> User Preferences -> Addons.
-5. At the bottom of the window, chose *Install From File*.
+5. At the bottom of the window, choose *Install From File*.
 6. Select the file `uvlayout_bridge_VERSION.zip` from your download location..
 7. Activate the checkbox for the plugin that you will now find in the list.
 8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
