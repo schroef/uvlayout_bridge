@@ -805,7 +805,7 @@ class UVLBridge_Panel(bpy.types.Panel):
         layout.operator(BL2UVL.bl_idname, text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
 
 
-#-- BRIDGE WM CALLMENU __#
+#-- BRIDGE WM DIALOG MENU __#
 class VIEW3D_MT_UVlayoutBridge_Menu(Operator):
     bl_idname = "uvlayout.bridge"
     bl_label = "Headus UVlayout Bridge"
