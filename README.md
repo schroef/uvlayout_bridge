@@ -20,11 +20,25 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 
 # Installation Process
 
+1. Download the latest [release](https://github.com/schroef/uvlayout_bridge/releases/) or clone the repository into a directory of your convenience.
+2. If you downloaded the zip file.
+3. Open Blender.
+4. Go to File -> User Preferences -> Addons.
+5. At the bottom of the window, chose *Install From File*.
+6. Select the file `uvlayout_bridge_VERSION.zip` from your download location..
+7. Activate the checkbox for the plugin that you will now find in the list.
+8. Choose setting according to system:
+    -Choose the Headus UVlayout application path if your on Windows.
+    -Choose the Headus UVlayout version if your OSX user.
+8. From startup the panel is located in the TOOLS panel.
+
+
 
 ## Changelog
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
+| 0.6.1 | 16.12.2017 | • Updated set config read/writing, errors occurred reading and writing file<br>• Updated Keymaps, name errors
 | 0.6 | 16.12.2017 | • Updated set config file, errors occurred with custom path. <br>• Updated WM call menu, now resizes when automation is checked.
 | 0.5 | 15.12.2017 | • Added OSX support for load options <br>• Added extra load options (Weld UVs, Clean, Detach Flipped UVs)<br>• Added checker for export from local view (is not supported)<br>• Added Automation, automatic packing and automatic save and return<br>• Added hotkeys for popup menu (for clean workflow)<br>• Added hotkeys to add-on panel for quick acces<br>• Added Quick Export shortcut (quick exports according to last settings)<br>• Added add-on preferences saving options. On restart all settings will be loaded<br>• Added custom export folder. Useful for when errors occur and file needs to be saved, quick access to files.
 | 0.4 | 07.12.2017 | • Added create backup when ‘Apply Modifier’ is added. <br>• Added option to export all visible objects, hidden and layers OFF won’t be exported.

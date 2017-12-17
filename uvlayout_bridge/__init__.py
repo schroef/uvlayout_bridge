@@ -12,7 +12,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > TOOLS > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 6),
+    "version": (0, 6, 1),
     "blender": (2, 78, 0),
 #    "wiki_url": "https://gumroad.com/l/Blender2UVLayoutBridge",
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
