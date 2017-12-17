@@ -23,7 +23,7 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
 8. From startup the panel is located in the TOOLS panel.
 
->This addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
+    >This addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
 ## System Requirements
 
