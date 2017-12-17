@@ -12,7 +12,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 
 ## Installation Process
 
-1. Download the latest [release](https://github.com/schroef/uvlayout_bridge/releases/) or clone the repository into a directory of your convenience.
+1. Download the latest <b>[release](https://github.com/schroef/uvlayout_bridge/releases/)</b> or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
 3. Open Blender.
 4. Go to File -> User Preferences -> Addons.
