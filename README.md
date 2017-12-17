@@ -1,4 +1,4 @@
-# Headus UVlayout Bridge
+## Headus UVlayout Bridge
 
 >A bridge between Blender and Headus UVlayout for quick UVs unwrapping
 
@@ -9,16 +9,8 @@ Headus UVlayout Bridge is a [Blender](https://www.blender.org) add-on for export
 This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed on the system.
 
 
-## System Requirements
 
-| **OS** | **Blender** | **UVlayout** |
-| ------------- | ------------- | ------------- |
-| OSX | Blender 2.78 | All Versions |
-| Windows | Blender 2.78 | All Versions |
-| Linux | Not Tested | Not Tested |
-
-
-# Installation Process
+## Installation Process
 
 1. Download the latest [release](https://github.com/schroef/uvlayout_bridge/releases/) or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
@@ -30,9 +22,16 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
 8. From startup the panel is located in the TOOLS panel.
 
+# System Requirements
+
+| **OS** | **Blender** | **UVlayout** |
+| ------------- | ------------- | ------------- |
+| OSX | Blender 2.78 | All Versions |
+| Windows | Blender 2.78 | All Versions |
+| Linux | Not Tested | Not Tested |
 
 
-## Changelog
+# Changelog
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
@@ -43,11 +42,13 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 | 0.3 | 05.12.2017 | • Added Apply modifier option
 | 0.1 | 15.12.2017 | • First official release by Titus Lavrov
 
+<!--
 - Fill in data
     -
     -
+-->
 
-## Offical Blender Artist Thread
+# Offical Blender Artist Thread
 This is the [BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge) where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized for OSX.
 
 Copyright (C) 2017
