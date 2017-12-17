@@ -1,4 +1,4 @@
-## Headus UVlayout Bridge
+# Headus UVlayout Bridge
 
 >A bridge between Blender and Headus UVlayout for quick UVs unwrapping
 
@@ -22,7 +22,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
 8. From startup the panel is located in the TOOLS panel.
 
-# System Requirements
+## System Requirements
 
 | **OS** | **Blender** | **UVlayout** |
 | ------------- | ------------- | ------------- |
@@ -31,7 +31,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 | Linux | Not Tested | Not Tested |
 
 
-# Changelog
+## Changelog
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
@@ -48,7 +48,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
     -
 -->
 
-# Offical Blender Artist Thread
+## Offical Blender Artist Thread
 This is the [BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge) where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized for OSX.
 
 Copyright (C) 2017
