@@ -47,6 +47,7 @@ def setConfig(self, context):
 
         :param context: context
     '''
+    version = getattr(context.scene, "versionUVL", "")
     customPath = getattr(context.scene, "uvlb_customPath", "")
     pathEnable = getattr(context.scene, "uvlb_pathEnable", False)
     winPath = getattr(context.scene, "uvlb_winPath", "")
@@ -56,6 +57,7 @@ def setConfig(self, context):
     config.read(configPath)
     if not config.has_section("main"):
         config.add_section('main')
+    config.set('main', 'version', str(version))
     config.set('main', 'customPath', str(customPath))
     config.set('main', 'pathEnable', str(pathEnable))
     config.set('main', 'winPath', str(winPath))
@@ -667,9 +669,10 @@ class FILE_SN_choose_path(bpy.types.Operator, ImportHelper):
 helper_tabs_items = [("EXECUTE", "Modifiers", "")]
 
 #-- START EXPORT  --#
-class BL2UVL(Operator):
+class UVLB_OT_Export(Operator):
     """Unwrap models using Headus UVlayout, this Bridge provides a easy workflow."""
-    bl_idname = "uvlb.io"
+    bl_idname = "uvlb.export"
+    bl_name = "UVlayout Bridge"
     bl_label = "UVlayout Bridge"
 
     tab = EnumProperty(name = "Tab", default = "EXECUTE", items = helper_tabs_items)
@@ -802,12 +805,13 @@ class UVLBridge_Panel(bpy.types.Panel):
             column.row().prop(scn,"cloneOb")
 
         #-- START EXPORT --
-        layout.operator(BL2UVL.bl_idname, text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
+        layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
 
 
 #-- BRIDGE WM DIALOG MENU __#
-class VIEW3D_MT_UVlayoutBridge_Menu(Operator):
+class UVLAYOUT_OT_bridge(Operator):
     bl_idname = "uvlayout.bridge"
+    bl_name = "UVlayout DIALOG MENU"
     bl_label = "Headus UVlayout Bridge"
 
     tab = EnumProperty(name = "Tab", default = "EXECUTE",  items = helper_tabs_items)
@@ -903,7 +907,7 @@ class VIEW3D_MT_UVlayoutBridge_Menu(Operator):
             column.row().prop(scn,"cloneOb")
 
         #---Send button---
-        layout.operator(BL2UVL.bl_idname, text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
+        layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
         layout.separator()
 
     def invoke(self, context, event):
@@ -983,7 +987,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 
         col.separator()
         km = kc.keymaps['3D View']
-        kmi = get_hotkey_entry_item(km, 'uvlb.io', 'EXECUTE', 'tab')
+        kmi = get_hotkey_entry_item(km, 'uvlb.export', 'EXECUTE', 'tab')
         if kmi:
             col.context_pointer_set("keymap", km)
             rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
@@ -1044,7 +1048,7 @@ def register():
     kmi.properties.tab = "EXECUTE"
     addon_keymaps.append((km, kmi))
 
-    kmi = km.keymap_items.new("uvlb.io", "V", "PRESS", shift = True)
+    kmi = km.keymap_items.new("uvlb.export", "V", "PRESS", shift = True)
     kmi.properties.tab = "EXECUTE"
 
     addon_keymaps.append((km, kmi))
