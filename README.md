@@ -13,7 +13,7 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 
 ## Installation Process
 
-    this addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
+>this addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
 1. Download the <b>[latest release](https://github.com/schroef/uvlayout_bridge/releases/)</b> or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
