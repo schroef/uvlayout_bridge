@@ -2,11 +2,11 @@
 
 >A bridge between Blender and Headus UVlayout for quick UVs unwrapping
 
-Headus UVlayout Bridge is a [Blender](https://www.blender.org) add-on for exporting objects from Blender to Headus UVlayout for either quick uvwrapping. Its has multiple options and automation possibilities.
+Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for exporting objects from Blender to Headus UVlayout for either quick uvwrapping. Its has multiple options and automation possibilities.
 
 ![Header Image](https://github.com/schroef/uvlayout_bridge/blob/master/wiki/images/suzanne-gui-header-image.jpg)
 
-This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed on the system.
+This addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
 
 
@@ -49,6 +49,6 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 -->
 
 ## Offical Blender Artist Thread
-This is the [BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge) where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized for OSX.
+This is the <b>[BlenderArtist thread](https://blenderartists.org/forum/showthread.php?441849-Add-on-Blender-lt-gt-UVLayout-bridge)</b> where initial start from Titus Lavrov started. This version is a Fork of that source and has been optimized for OSX.
 
 Copyright (C) 2017
