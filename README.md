@@ -4,7 +4,7 @@
 
 Headus UVlayout Bridge is a [Blender](https://www.blender.org) add-on for exporting objects from Blender to Headus UVlayout for either quick uvwrapping. Its has multiple options and automation possibilities.
 
-![Header Image](https://github.com/schroef/uvlayout_bridge/blob/master/wiki/images/suzanne-header-image.jpg)
+![Header Image](https://github.com/schroef/uvlayout_bridge/blob/master/wiki/images/suzanne-gui-header-image.jpg)
 
 This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed on the system.
 
