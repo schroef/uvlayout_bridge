@@ -8,12 +8,7 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 >Preview of the Blender Add-on panel Headus UVlayout Bridge
 
 
-
-
-
 ## Installation Process
-
->this addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
 1. Download the <b>[latest release](https://github.com/schroef/uvlayout_bridge/releases/)</b> or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
@@ -24,6 +19,8 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 7. Activate the checkbox for the plugin that you will now find in the list.
 8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
 8. From startup the panel is located in the TOOLS panel.
+
+>this addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
 
 ## System Requirements
