@@ -27,9 +27,7 @@ This addon requires [Headus UVlayout](https://www.uvlayout.com/) to be installed
 5. At the bottom of the window, chose *Install From File*.
 6. Select the file `uvlayout_bridge_VERSION.zip` from your download location..
 7. Activate the checkbox for the plugin that you will now find in the list.
-8. Choose setting according to system:
-    -Choose the Headus UVlayout application path if your on Windows.
-    -Choose the Headus UVlayout version if your OSX user.
+8. Choose setting according to system:<br>-Choose the Headus UVlayout application path if your on Windows.<br>-Choose the Headus UVlayout version if your OSX user.
 8. From startup the panel is located in the TOOLS panel.
 
 
