@@ -13,7 +13,7 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 
 ## Installation Process
 
-1. Download the latest <b>[release](https://github.com/schroef/uvlayout_bridge/releases/)</b> or clone the repository into a directory of your convenience.
+1. Download the <b>[latest release](https://github.com/schroef/uvlayout_bridge/releases/)</b> or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
 3. Open Blender.
 4. Go to File -> User Preferences -> Addons.
