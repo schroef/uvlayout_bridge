@@ -1,9 +1,7 @@
 ChangeLog
 ---------
-Version 0.6.1:
-- Updated set config read/writing, errors occurred reading and writing file
-- Updated Keymaps, name errors
-
+Version 0.6.2:
+- Minor cleaning in GUI
 
 Version 0.6:
 - Updated set config file, errors occurred with custom path
