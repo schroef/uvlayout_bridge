@@ -5,7 +5,9 @@
 #   - Fix custom path and preload, with old scene opened wrong paths are used.
 #     It uses the path from file for export and path for import fro ini. Add extra update for path on EXport
 #   - Try scene without getConfig this is not needed as enum already loads settings
-####################
+#	- Added d2.80 support
+#	- updated user_preferences to preferences
+
 ####################
 ## v.0.6.3
 ## 29-12-18
@@ -20,20 +22,21 @@
 ## Added
 ## - Missing skip local to popup menu
 
+
 bl_info = {
 	"name": "Headus UVLayout Bridge",
 	"description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
-	"location": "3D VIEW > TOOLS > Headus UVlayout Panel",
+	"location": "3D VIEW > Properties > Headus UVlayout Panel",
 	"author": "Rombout Versluijs // Titus Lavrov",
 	"version": (0, 6, 3),
-	"blender": (2, 78, 0),
-#    "wiki_url": "https://gumroad.com/l/Blender2UVLayoutBridge",
+	"blender": (2, 80, 0),
 	"wiki_url": "https://github.com/schroef/uvlayout_bridge",
 	"tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
 	"category": "UV"
 }
 
 import bpy
+import collections
 import os
 import rna_keymap_ui
 #import sys
@@ -308,10 +311,17 @@ if platform == "win32":
 print("OS used: %s" % platform)
 
 
-def is_local():
-	for ob in bpy.context.scene.objects:
-		print("ob: %s - %s" % (ob.name, ob.layers_local_view[0]))
-		if ob.layers_local_view[0]:
+def is_local(context):
+	#for ob in bpy.context.scene.objects:
+	for ob in bpy.context.scene.collection.objects:
+		#bpy.context.view_layer.objects.active = bpy.data.objects[ob.name]
+		## 2.80
+		view = context.space_data
+		is_local_view = (view.local_view is not None)
+		print("ob: %s - %s" % (ob.name, is_local_view))
+		#if ob.layers_local_view[0]:
+		## 2.80
+		if is_local_view:
 			return True
 		else:
 			pass
@@ -357,7 +367,9 @@ def UVL_IO():
 	Objs = []
 
 	#--Check visible objects
-	def layers_intersect(a, b, name_a="layers", name_b=None):
+	#def layers_intersect(a, b, name_a="layers", name_b=None):
+	## 2.80
+	def layers_intersect(a, b, name_a="collection", name_b=None):
 		return any(l0 and l1 for l0, l1 in zip(getattr(a, name_a), getattr(b, name_b or name_a)))
 
 	def gather_objects(scene):
@@ -365,7 +377,7 @@ def UVL_IO():
 
 		def no_export(obj):
 #            return obj.select and (not obj.hide) and (not obj.hide_select) and layers_intersect(obj, scene) and obj.is_visible(scene)
-			return (not obj.hide) and (not obj.hide_select) and layers_intersect(obj, scene) and obj.is_visible(scene)
+			return (not obj.hide_viewport) and (not obj.hide_select) and layers_intersect(obj, scene) and obj.visible_get(scene)
 		def is_selected(obj):
 			return obj.select
 		def add_obj(obj):
@@ -381,7 +393,8 @@ def UVL_IO():
 				print ("Objects include: %s" % obj)
 				return
 
-		for obj in scene.objects:
+		#for obj in scene.objects:
+		for obj in scene.collection.objects:
 			if (not no_export(obj)):
 				objexcl.discard(obj)
 				continue
@@ -393,7 +406,8 @@ def UVL_IO():
 #    print ("Objects: %s" % objexcl)
 	for ob in objexcl:
 		#--Select object only visible and set selection
-		bpy.data.objects[ob.name].select = True
+		## 2.80
+		bpy.data.objects[ob.name].select_set(state=True)
 		print ("Objects exclude: %s" % ob.name)
 		scn.selOnly = True
 
@@ -408,10 +422,13 @@ def UVL_IO():
 			scn.spaceName = True
 
 		if ob.type == 'MESH':
-			if len(ob.data.uv_textures) < bpy.context.scene.uvlb_uv_channel:
+			## 2.80
+			if len(ob.data.uv_layers) < bpy.context.scene.uvlb_uv_channel:
 				for n in range(bpy.context.scene.uvlb_uv_channel):
-					ob.data.uv_textures.new()
-		ob.data.uv_textures.active_index = (bpy.context.scene.uvlb_uv_channel - 1)
+					## 2.80
+					ob.data.uv_layers.new()
+		## 2.80
+		ob.data.uv_layers.active_index = (bpy.context.scene.uvlb_uv_channel - 1)
 		Objs.append(ob)
 
 	#---Lists buildUP---
@@ -424,7 +441,9 @@ def UVL_IO():
 					newObj.data = ob.data.copy()
 					newObj.name = ob.name + "_Backup"
 					newObj.animation_data_clear()
-					scn.objects.link(newObj)
+					#scn.objects.link(newObj)
+					## 2.80
+					scn.collection.objects.link(newObj)
 				if mod.type == 'SUBSURF':
 					print ("Obj Name: %s - Mod Applied: %s" % (ob.name, mod.type))
 					bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
@@ -432,25 +451,31 @@ def UVL_IO():
 		newObj.data = ob.data.copy()
 		newObj.animation_data_clear()
 		newObj.name = ob.name + "__UVL"
-		bpy.context.scene.objects.link(newObj)
+		#bpy.context.scene.objects.link(newObj)
+		## 2.80
+		bpy.context.scene.collection.objects.link(newObj)
 		expObjs.append(newObj)
 		expMeshes.append(newObj.data)
+
 	#---Texture channels cleanup exept uvlb_uv_channel
 	for ob in expMeshes:
 		active_index = (bpy.context.scene.uvlb_uv_channel - 1)
-		texName=ob.uv_textures[active_index].name
-		uv_textures = ob.uv_textures
+		## 2.80
+		texName=ob.uv_layers[active_index].name
+		## 2.80
+		uv_layers = ob.uv_layers
 		ObjTexs=[]
-		for t in uv_textures:
+		for t in uv_layers:
 			ObjTexs.append(t.name)
 		for u in ObjTexs:
 			if u != texName:
-				uv_textures.remove(uv_textures[u])
+				uv_layers.remove(uv_layers[u])
 
 	#---Select objects for EXPORT
 	bpy.ops.object.select_all(action='DESELECT')
 	for ob in expObjs:
-		bpy.data.objects[ob.name].select = True
+		## 2.80
+		bpy.data.objects[ob.name].select_set(state=True)
 
 
 	#---EXPORT---
@@ -484,7 +509,9 @@ def UVL_IO():
 		scn.selOnly = False
 	#---OBJs Clean up and deselect before import
 	for ob in expMeshes:
-		bpy.data.meshes.remove(ob,True)
+		#bpy.data.meshes.remove(ob,True)
+		## 2.80
+		bpy.data.meshes.remove(ob, do_unlink=True)
 
 	bpy.ops.object.select_all(action='DESELECT')
 
@@ -617,7 +644,9 @@ def UVL_IO():
 									use_groups_as_vgroups = True,
 									use_image_search = False,
 									split_mode = 'ON',
-									global_clamp_size = 0);
+									### TYPO???
+									global_clight_size = 0
+									);
 
 			#---Close UVLAYOUT ---
 			f = open(path + file_cmdName, "w+")
@@ -634,9 +663,11 @@ def UVL_IO():
 				#---Get source object name
 				refName=ob.name.split('__UVL')
 				#---Select source object---
-				bpy.data.objects[refName[0]].select = True
+				## 2.80
+				bpy.data.objects[refName[0]].select_set(state=True)
 				#---Select UVL object
-				bpy.context.scene.objects.active = bpy.data.objects[ob.name]
+				## 2.80
+				bpy.context.view_layer.objects.active = bpy.data.objects[ob.name]
 				#---Transfer UVs from UVL object to Source object
 				bpy.ops.object.join_uvs()
 				bpy.ops.object.select_all(action='DESELECT')
@@ -644,16 +675,19 @@ def UVL_IO():
 			bpy.ops.object.select_all(action='DESELECT')
 
 			for ob in uvlObjs:
-				print("DEL")
-				bpy.data.meshes.remove(ob.data,True)
+				#bpy.data.meshes.remove(ob.data,True)
+				## 2.80
+				objD = ob.data
+				bpy.data.meshes.remove(objD, do_unlink=True)
 
 			bpy.ops.object.select_all(action='DESELECT')
 
 			for ob in Objs:
-#                bpy.data.objects[ob.name].select = True
 				#---Make new seams
-				ob.select = True
-				bpy.context.scene.objects.active = ob
+				## 2.80
+				ob.select_set(state=True)
+				## 2.80
+				bpy.context.view_layer.objects.active = ob
 				bpy.ops.object.mode_set(mode='EDIT')
 				bpy.ops.object.mode_set(mode='EDIT')
 				bpy.ops.mesh.select_all(action='SELECT')
@@ -667,7 +701,7 @@ class FILE_SN_choose_path(bpy.types.Operator, ImportHelper):
 	bl_label = "Choose path export location"
 
 	#    filename_ext = "*.scn.thea; *.mat.thea"
-	filter_glob = StringProperty(
+	filter_glob: StringProperty(
 		default="DIR_PATH",
 		#            default="*.png;*.jpeg;*.jpg;*.tiff")#,
 		options={'HIDDEN'}, )
@@ -677,11 +711,6 @@ class FILE_SN_choose_path(bpy.types.Operator, ImportHelper):
 		if scn != None:
 			setattr(scn, "uvlb_customPath", self.filepath)
 			return {'FINISHED'}
-#        else:
-#            #            mat = bpy.data.materials["basic_gray"]
-#            mat = bpy.data.materials[checkTheaExtMat()[1]]
-#            setattr(mat, "thea_extMat", self.filepath)
-#            return {'FINISHED'}
 
 
 helper_tabs_items = [("EXECUTE", "Modifiers", "")]
@@ -693,16 +722,15 @@ class UVLB_OT_Export(Operator):
 	bl_name = "UVlayout Bridge"
 	bl_label = "UVlayout Bridge"
 
-	tab = EnumProperty(name = "Tab", default = "EXECUTE", items = helper_tabs_items)
+	tab: EnumProperty(name = "Tab", default = "EXECUTE", items = helper_tabs_items)
 
 	def execute(self, context):
 		scn = bpy.context.scene
 		scn.spaceName = False
 
-		if scn.checkLocal:
-			if is_local():
-				self.report({'ERROR'}, "Localview Not Supported")
-				return {'FINISHED'}
+		if is_local(context):
+			self.report({'ERROR'}, "Localview Not Supported")
+			return {'FINISHED'}
 		#-- OSX check if application is chosen correct
 		if platform == "darwin":
 			versionUVL = getattr(scn, "versionUVL")
@@ -730,13 +758,13 @@ class UVLB_OT_Export(Operator):
 
 
 #-- BRIDGE PANEL TOOL TAB __#
-class UVLBridge_Panel(bpy.types.Panel):
+class UVLBridge_PT_Panel(bpy.types.Panel):
 	"""Creates a Unfold3d bridge Panel"""
 	bl_label = "Headus UVlayout Bridge"
 	bl_idname = "UVLBridge"
 	bl_space_type = 'VIEW_3D'
-	bl_region_type = 'TOOLS'
-	bl_category = "Tools"
+	bl_region_type = 'UI'
+	bl_category = "UVLBridge"
 	bl_context = "objectmode"
 	bl_options = {"DEFAULT_CLOSED"}
 
@@ -753,28 +781,28 @@ class UVLBridge_Panel(bpy.types.Panel):
 
 		#-- UVLAYOUT LOAD OPTIONS --
 		settingsBox = layout.box()
-		uvlbHeader = settingsBox.split(.9)
+		uvlbHeader = settingsBox.split(factor=0.9)
 		column = uvlbHeader.column()
-		column.row().label("Load Options:")
+		column.row().label(text="Load Options:")
 
 		column = uvlbHeader.column()
 		column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
 
-		uvlbOptions = settingsBox.split(.5)
+		uvlbOptions = settingsBox.split(factor=0.5)
 		column = uvlbOptions.column()
-		column.row().label("Mode:")
-		column.row().label("Uv Mode:")
+		column.row().label(text="Mode:")
+		column.row().label(text="Uv Mode:")
 
 		column = uvlbOptions.column()
 		column.row().prop(scn, "uvlb_mode", text="",icon = getattr(scn,"iconMode",2))
 		column.row().prop(scn, "uvlb_uv_mode", text="",icon = getattr(scn,"iconUVMode",2))
 
-		uvlbOptions = settingsBox.split(.9)
+		uvlbOptions = settingsBox.split(factor=0.9)
 		column = uvlbOptions.column()
-		column.row().label("Weld UVs")
-		column.row().label("Detach Flipped UV's")
+		column.row().label(text="Weld UVs")
+		column.row().label(text="Detach Flipped UV's")
 		if (getattr(scn, "uvlb_uv_mode",) == '0'):
-			column.row().label("Clean")
+			column.row().label(text="Clean")
 
 		column = uvlbOptions.column()
 		column.row().prop(scn, "uvlb_uv_weld", text="")
@@ -785,12 +813,12 @@ class UVLBridge_Panel(bpy.types.Panel):
 
 		#-- QUICK COMMANDS --#
 		settingsBox = layout.box()
-		uvlbAutoCom = settingsBox.split(.9)
+		uvlbAutoCom = settingsBox.split(factor=0.9)
 		column = uvlbAutoCom.column()
-		column.row().label("Automation:")
+		column.row().label(text="Automation:")
 		if scn.uvlb_autoComm:
-			column.row().label("Auto-Pack")
-			column.row().label("Save & Return")
+			column.row().label(text="Auto-Pack")
+			column.row().label(text="Save & Return")
 
 		column = uvlbAutoCom.column()
 		column.row().prop(scn, "uvlb_autoComm", text="")
@@ -801,25 +829,25 @@ class UVLBridge_Panel(bpy.types.Panel):
 		#-- UVMAPS --
 		uvMapBox = layout.box()
 		uvMapChannel = uvMapBox.row()
-		uvMapChannel = uvMapChannel.split(percentage=0.5)
-		uvMapChannel.label("UV Channel:", icon="GROUP_UVS")
+		uvMapChannel = uvMapChannel.split(factor=0.5)
+		uvMapChannel.label(text="UV Channel:", icon="GROUP_UVS")
 		uvMapChannel.prop(scn, "uvlb_uv_channel", text="")
 
 		#-- OBJ EXPORT options --
 		objBox = layout.box()
-		objBox = objBox.split(0.9)
+		objBox = objBox.split(factor=0.9)
 
 		column = objBox.column()
-		column.row().label("OBJ Export Settings:")
-		column.row().label("Selection Only")
-		column.row().label("Apply Modifiers")
+		column.row().label(text="OBJ Export Settings:")
+		column.row().label(text="Selection Only")
+		column.row().label(text="Apply Modifiers")
 		if scn.appMod:
-			column.row().label("Create Backup")
-			column.row().label("Subsurf will be applied, backup?", icon='ERROR')
-		column.row().label("Skip localview check")
+			column.row().label(text="Create Backup")
+			column.row().label(text="Subsurf will be applied, backup?", icon='ERROR')
+		column.row().label(text="Skip localview check")
 
 		column = objBox.column()
-		column.row().label("")
+		column.row().label(text="")
 		column.row().prop(scn,"selOnly", text="")
 		column.row().prop(scn,"appMod", text="")
 		if scn.appMod:
@@ -837,7 +865,7 @@ class UVLAYOUT_OT_bridge(Operator):
 	bl_name = "UVlayout DIALOG MENU"
 	bl_label = "Headus UVlayout Bridge"
 
-	tab = EnumProperty(name = "Tab", default = "EXECUTE",  items = helper_tabs_items)
+	tab: EnumProperty(name = "Tab", default = "EXECUTE",  items = helper_tabs_items)
 
 	def execute(self, context):
 		return {'FINISHED'}
@@ -858,28 +886,28 @@ class UVLAYOUT_OT_bridge(Operator):
 
 		#-- UVLAYOUT LOAD OPTIONS --
 		settingsBox = layout.box()
-		uvlbHeader = settingsBox.split(.92)
+		uvlbHeader = settingsBox.split(factor=0.92)
 		column = uvlbHeader.column()
-		column.row().label("Load Options:")
+		column.row().label(text="Load Options:")
 
 		column = uvlbHeader.column()
 		column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
 
-		uvlbOptions = settingsBox.split(.5)
+		uvlbOptions = settingsBox.split(factor=0.5)
 		column = uvlbOptions.column()
-		column.row().label("Mode:")
-		column.row().label("Uv Mode:")
+		column.row().label(text="Mode:")
+		column.row().label(text="Uv Mode:")
 
 		column = uvlbOptions.column()
 		column.row().prop(scn, "uvlb_mode", text="",icon = getattr(scn,"iconMode",2))
 		column.row().prop(scn, "uvlb_uv_mode", text="",icon = getattr(scn,"iconUVMode",2))
 
-		uvlbOptions = settingsBox.split(.92)
+		uvlbOptions = settingsBox.split(factor=0.92)
 		column = uvlbOptions.column()
-		column.row().label("Weld UVs")
-		column.row().label("Detach Flipped UV's")
+		column.row().label(text="Weld UVs")
+		column.row().label(text="Detach Flipped UV's")
 		if (getattr(scn, "uvlb_uv_mode",) == '0'):
-			column.row().label("Clean")
+			column.row().label(text="Clean")
 
 		column = uvlbOptions.column()
 		column.row().prop(scn, "uvlb_uv_weld", text="")
@@ -890,12 +918,12 @@ class UVLAYOUT_OT_bridge(Operator):
 
 		#-- QUICK COMMANDS --#
 		settingsBox = layout.box()
-		uvlbAutoCom = settingsBox.split(.92)
+		uvlbAutoCom = settingsBox.split(factor=0.92)
 		column = uvlbAutoCom.column()
-		column.row().label("Automation:")
+		column.row().label(text="Automation:")
 		if scn.uvlb_autoComm:
-			column.row().label("Auto-Pack")
-			column.row().label("Save & Return")
+			column.row().label(text="Auto-Pack")
+			column.row().label(text="Save & Return")
 
 		column = uvlbAutoCom.column()
 		column.row().prop(scn, "uvlb_autoComm", text="")
@@ -906,25 +934,25 @@ class UVLAYOUT_OT_bridge(Operator):
 		#-- UVMAPS --
 		uvMapBox = layout.box()
 		uvMapChannel = uvMapBox.row()
-		uvMapChannel = uvMapChannel.split(percentage=0.5)
-		uvMapChannel.label("UV Channel:", icon="GROUP_UVS")
+		uvMapChannel = uvMapChannel.split(factor=0.5)
+		uvMapChannel.label(text="UV Channel:", icon="GROUP_UVS")
 		uvMapChannel.prop(scn, "uvlb_uv_channel", text="")
 
 		#-- OBJ EXPORT options --
 		objBox = layout.box()
-		objBox = objBox.split(0.92)
+		objBox = objBox.split(factor=0.92)
 
 		column = objBox.column()
-		column.row().label("OBJ Export Settings:")
-		column.row().label("Selection Only")
-		column.row().label("Apply Modifiers")
+		column.row().label(text="OBJ Export Settings:")
+		column.row().label(text="Selection Only")
+		column.row().label(text="Apply Modifiers")
 		if scn.appMod:
-			column.row().label("Create Backup")
-			column.row().label("Subsurf will be applied, backup?", icon='ERROR')
-		column.row().label("Skip localview check")
+			column.row().label(text="Create Backup")
+			column.row().label(text="Subsurf will be applied, backup?", icon='ERROR')
+		column.row().label(text="Skip localview check")
 
 		column = objBox.column()
-		column.row().label("")
+		column.row().label(text="")
 		column.row().prop(scn,"selOnly", text="")
 		column.row().prop(scn,"appMod", text="")
 		if scn.appMod:
@@ -937,7 +965,7 @@ class UVLAYOUT_OT_bridge(Operator):
 		layout.separator()
 
 	def invoke(self, context, event):
-		return context.window_manager.invoke_props_dialog(self, width=425)
+		return context.window_manager.invoke_props_dialog(self, width=225)
 #
 #    def modal(self, context, event):
 #        return context.window_manager.invoke_props_dialog(self, width=225)
@@ -966,7 +994,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 			box=layout.box()
 			split = box.split()
 			col = split.column()
-			col.label("Headus UVlayout Version:")
+			col.label(text = "Headus UVlayout Version:")
 			col.prop(scene, "versionUVL", text="")
 			col.label(text = "* No application path settings needed on OSX")
 #            col.separator()
@@ -974,27 +1002,27 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 		col.separator()
 		#-- CUSTOM EXPORT PATH --
 		expBut = layout.box()
-		expBut = expBut.split(.95)
+		expBut = expBut.split(factor=0.95)
 
 		column = expBut.column()
-		column.row().label("Custom export path:")
+		column.row().label(text = "Custom export path:")
 		if scene.uvlb_pathEnable:
 			column.row().prop(scene, "uvlb_customPath", text="")
-			column.row().label("Path will be saved per scene")
+			column.row().label(text = "Path will be saved per scene")
 			column.separator()
 
 		column = expBut.column()
 		column.row().prop(scene,"uvlb_pathEnable", text="")
 		if scene.uvlb_pathEnable:
-			column.row().operator("open.path_loc", text="", icon='FILESEL')
+			column.row().operator("open.path_loc", text="", icon='FILEBROWSER')
 			column.separator()
 
 		box=layout.box()
 		split = box.split()
 		col = split.column()
 #        col.separator()
-		col.label('Hotkeys:')
-		col.label('Do NOT remove hotkeys, disable them instead!')
+		col.label(text = "Hotkeys:")
+		col.label(text = "Do NOT remove hotkeys, disable them instead!")
 
 		col.separator()
 		wm = bpy.context.window_manager
@@ -1005,11 +1033,11 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 		if kmi:
 			col.context_pointer_set("keymap", km)
 			rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
-			col.label("Quick export using last settings")
+			col.label(text = "Quick export using last settings")
 
 		else:
-			col.label("Shift + V = quick export using last settings")
-			col.label("restore hotkeys from interface tab")
+			col.label(text = "Shift + V = quick export using last settings")
+			col.label(text = "restore hotkeys from interface tab")
 
 		col.separator()
 		km = kc.keymaps['3D View']
@@ -1017,10 +1045,10 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 		if kmi:
 			col.context_pointer_set("keymap", km)
 			rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
-			col.label("Opens the popup window")
+			col.label(text = "Opens the popup window")
 		else:
-			col.label("Alt + Shift + V = opens the popup window")
-			col.label("restore hotkeys from interface tab")
+			col.label(text = "Alt + Shift + V = opens the popup window")
+			col.label(text = "restore hotkeys from interface tab")
 		col.separator()
 
 
@@ -1033,8 +1061,8 @@ class OBJECT_OT_b2uvl_addon_prefs(Operator):
 
 	def execute(self, context):
 		if platform == "win32":
-			user_preferences = context.user_preferences
-			addon_prefs = user_preferences.addons[__name__].preferences
+			preferences = context.preferences
+			addon_prefs = preferences.addons[__name__].preferences
 
 			info = ("Path: %s" % (addon_prefs.uvlb_winPath))
 
@@ -1062,8 +1090,22 @@ custom_icons = None
 
 
 addon_keymaps = []
+
+#Classes for register and unregister
+classes = (
+	FILE_SN_choose_path,
+	UVLB_OT_Export,
+	UVLBridge_PT_Panel,
+	UVLAYOUT_OT_bridge,
+	Blender2UVLayoutAddonPreferences,
+	OBJECT_OT_b2uvl_addon_prefs
+	)
+
+
 def register():
-	bpy.utils.register_module(__name__)
+	for cls in classes:
+		bpy.utils.register_class(cls)
+
 
 	wm = bpy.context.window_manager
 	kc = wm.keyconfigs.addon
@@ -1092,7 +1134,8 @@ def unregister():
 		km.keymap_items.remove(kmi)
 	addon_keymaps.clear()
 
-	bpy.utils.unregister_module(__name__)
+	for cls in reversed(classes):
+		bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":
