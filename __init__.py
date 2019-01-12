@@ -6,13 +6,26 @@
 #     It uses the path from file for export and path for import fro ini. Add extra update for path on EXport
 #   - Try scene without getConfig this is not needed as enum already loads settings
 ####################
+####################
+## v.0.6.3
+## 29-12-18
+## Changed
+## - Added skip local view, some scene cause errors
+
+## 12-01-19
+## Fixed
+## - Small UI change
+## - Hotkey issue
+##
+## Added
+## - Missing skip local to popup menu
 
 bl_info = {
 	"name": "Headus UVLayout Bridge",
 	"description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
 	"location": "3D VIEW > TOOLS > Headus UVlayout Panel",
 	"author": "Rombout Versluijs // Titus Lavrov",
-	"version": (0, 6, 2),
+	"version": (0, 6, 3),
 	"blender": (2, 78, 0),
 #    "wiki_url": "https://gumroad.com/l/Blender2UVLayoutBridge",
 	"wiki_url": "https://github.com/schroef/uvlayout_bridge",
@@ -275,6 +288,10 @@ scn.uvlb_autoCOMS = EnumProperty(
 	description = "Some commands are buggy and will crash the window. You need to redo the export from Blender and try again :(",
 	default = '5')
 
+scn.checkLocal = bpy.props.BoolProperty(
+	name = "Skip Local",
+	default = False,
+	description="If issue with localview arrises skip it.")
 
 	#---Check OS---
 #    bpy.types.Scene.osSys = EnumProperty(
@@ -627,6 +644,7 @@ def UVL_IO():
 			bpy.ops.object.select_all(action='DESELECT')
 
 			for ob in uvlObjs:
+				print("DEL")
 				bpy.data.meshes.remove(ob.data,True)
 
 			bpy.ops.object.select_all(action='DESELECT')
@@ -681,9 +699,10 @@ class UVLB_OT_Export(Operator):
 		scn = bpy.context.scene
 		scn.spaceName = False
 
-		if is_local():
-			self.report({'ERROR'}, "Localview Not Supported")
-			return {'FINISHED'}
+		if scn.checkLocal:
+			if is_local():
+				self.report({'ERROR'}, "Localview Not Supported")
+				return {'FINISHED'}
 		#-- OSX check if application is chosen correct
 		if platform == "darwin":
 			versionUVL = getattr(scn, "versionUVL")
@@ -719,6 +738,7 @@ class UVLBridge_Panel(bpy.types.Panel):
 	bl_region_type = 'TOOLS'
 	bl_category = "Tools"
 	bl_context = "objectmode"
+	bl_options = {"DEFAULT_CLOSED"}
 
 	@classmethod
 	def poll(cls, context):
@@ -796,6 +816,7 @@ class UVLBridge_Panel(bpy.types.Panel):
 		if scn.appMod:
 			column.row().label("Create Backup")
 			column.row().label("Subsurf will be applied, backup?", icon='ERROR')
+		column.row().label("Skip localview check")
 
 		column = objBox.column()
 		column.row().label("")
@@ -803,6 +824,8 @@ class UVLBridge_Panel(bpy.types.Panel):
 		column.row().prop(scn,"appMod", text="")
 		if scn.appMod:
 			column.row().prop(scn,"cloneOb", text="")
+			column.row().label(text="")
+		column.row().prop(scn,"checkLocal", text="")
 
 		#-- START EXPORT --
 		layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
@@ -898,6 +921,7 @@ class UVLAYOUT_OT_bridge(Operator):
 		if scn.appMod:
 			column.row().label("Create Backup")
 			column.row().label("Subsurf will be applied, backup?", icon='ERROR')
+		column.row().label("Skip localview check")
 
 		column = objBox.column()
 		column.row().label("")
@@ -905,6 +929,8 @@ class UVLAYOUT_OT_bridge(Operator):
 		column.row().prop(scn,"appMod", text="")
 		if scn.appMod:
 			column.row().prop(scn,"cloneOb", text="")
+			column.row().label(text="")
+		column.row().prop(scn,"checkLocal", text="")
 
 		#---Send button---
 		layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
@@ -975,7 +1001,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 		kc = wm.keyconfigs.user
 
 		km = kc.keymaps['3D View']
-		kmi = get_hotkey_entry_item(km, 'uvlayout.bridge', 'EXECUTE', 'tab')
+		kmi = get_hotkey_entry_item(km, 'uvlb.export', 'EXECUTE', 'tab')
 		if kmi:
 			col.context_pointer_set("keymap", km)
 			rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
@@ -987,7 +1013,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 
 		col.separator()
 		km = kc.keymaps['3D View']
-		kmi = get_hotkey_entry_item(km, 'uvlb.export', 'EXECUTE', 'tab')
+		kmi = get_hotkey_entry_item(km, 'uvlayout.bridge', 'EXECUTE', 'tab')
 		if kmi:
 			col.context_pointer_set("keymap", km)
 			rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
