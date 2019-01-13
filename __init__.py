@@ -7,13 +7,14 @@
 #   - Try scene without getConfig this is not needed as enum already loads settings
 #	- Added d2.80 support
 #	- updated user_preferences to preferences
+####################
 
 ####################
 ## v.0.6.3
 ## 29-12-18
 ## Changed
 ## - Added skip local view, some scene cause errors
-
+##
 ## 12-01-19
 ## Fixed
 ## - Small UI change
@@ -21,14 +22,32 @@
 ##
 ## Added
 ## - Missing skip local to popup menu
+##
+## Changed
+## - Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
+## - Label was replace due to new WM menu
+## - Export button has more logical label
 
+## v.0.6.4
+## 12-01-19
+## Changed
+## - Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
+## - Label was replace due to new WM menu
+## - Export button has more logical label
+##
+## Fixed
+## - Apply modifier for bl 2.80
+##
+## Added
+## - Undo for export operation in case of error or malfunction
+####################
 
 bl_info = {
 	"name": "Headus UVLayout Bridge",
 	"description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
 	"location": "3D VIEW > Properties > Headus UVlayout Panel",
 	"author": "Rombout Versluijs // Titus Lavrov",
-	"version": (0, 6, 3),
+	"version": (0, 6, 4),
 	"blender": (2, 80, 0),
 	"wiki_url": "https://github.com/schroef/uvlayout_bridge",
 	"tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -446,7 +465,7 @@ def UVL_IO():
 					scn.collection.objects.link(newObj)
 				if mod.type == 'SUBSURF':
 					print ("Obj Name: %s - Mod Applied: %s" % (ob.name, mod.type))
-					bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+					bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subdivision")
 		newObj = ob.copy()
 		newObj.data = ob.data.copy()
 		newObj.animation_data_clear()
@@ -721,12 +740,17 @@ class UVLB_OT_Export(Operator):
 	bl_idname = "uvlb.export"
 	bl_name = "UVlayout Bridge"
 	bl_label = "UVlayout Bridge"
+	bl_options = {'REGISTER','UNDO'}
 
 	tab: EnumProperty(name = "Tab", default = "EXECUTE", items = helper_tabs_items)
 
 	def execute(self, context):
 		scn = bpy.context.scene
 		scn.spaceName = False
+
+		## Check if object is editmode
+		if bpy.context.active_object.mode == 'EDIT':
+			bpy.ops.object.editmode_toggle()
 
 		if is_local(context):
 			self.report({'ERROR'}, "Localview Not Supported")
@@ -856,7 +880,7 @@ class UVLBridge_PT_Panel(bpy.types.Panel):
 		column.row().prop(scn,"checkLocal", text="")
 
 		#-- START EXPORT --
-		layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
+		layout.operator("uvlb.export", text = "Unwrap in UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
 
 
 #-- BRIDGE WM DIALOG MENU __#
@@ -883,6 +907,9 @@ class UVLAYOUT_OT_bridge(Operator):
 		scn = bpy.context.scene
 		obj = bpy.context.object
 		me = obj.data
+
+		#Replaces header panel
+		layout.label(text=self.bl_label)
 
 		#-- UVLAYOUT LOAD OPTIONS --
 		settingsBox = layout.box()
@@ -961,11 +988,13 @@ class UVLAYOUT_OT_bridge(Operator):
 		column.row().prop(scn,"checkLocal", text="")
 
 		#---Send button---
-		layout.operator("uvlb.export", text = "Headus UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
+		layout.operator("uvlb.export", text = "Unwrap in UVlayout  >", icon_value=custom_icons["uvl"].icon_id)
 		layout.separator()
 
 	def invoke(self, context, event):
-		return context.window_manager.invoke_props_dialog(self, width=225)
+		return context.window_manager.invoke_popup(self, width=425)
+
+		#return context.window_manager.invoke_props_dialog(self, width=225)
 #
 #    def modal(self, context, event):
 #        return context.window_manager.invoke_props_dialog(self, width=225)
