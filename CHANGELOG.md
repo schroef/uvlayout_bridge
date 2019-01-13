@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ChangeLog
 ---------
+## [0.6.4] - 2019-01-12
+### Changed
+- Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
+- Label was replace due to new WM menu
+- Export button has more logical label
+
+### Fixed
+- Apply modifier for bl 2.80
+
+### Added
+- Undo for export operation in case of error or malfunction
+
 ## [0.6.3] - 2019-01-12
 ### Fixed
 - Issue with swapped keymap code
@@ -61,6 +73,7 @@ ChangeLog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[0.6.4]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.4
 [0.6.3]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.3
 [0.6.2]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.2
 [0.6.1]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.1
