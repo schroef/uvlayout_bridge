@@ -5,7 +5,7 @@ ChangeLog
 ---------
 ## [0.6.5] - 2019-02-26
 ### Fixed
-- Error caused by items inside collection
+- Error caused by items inside collection (bl 2.80)
 - Non Mesh types where added when "selection only" was off
 
 ## [0.6.4] - 2019-01-12
