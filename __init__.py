@@ -40,6 +40,12 @@
 ##
 ## Added
 ## - Undo for export operation in case of error or malfunction
+
+## v.0.6.5
+## 26-02-19
+## Fixed
+## - Error caused by items inside collection
+## - Non Mesh types where added when "selection only" was off
 ####################
 
 bl_info = {
@@ -47,7 +53,7 @@ bl_info = {
 	"description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
 	"location": "3D VIEW > Properties > Headus UVlayout Panel",
 	"author": "Rombout Versluijs // Titus Lavrov",
-	"version": (0, 6, 4),
+	"version": (0, 6, 5),
 	"blender": (2, 80, 0),
 	"wiki_url": "https://github.com/schroef/uvlayout_bridge",
 	"tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -102,14 +108,13 @@ def setConfig(self, context):
 
 def getVersionUVL():
 	'''get UVlayout version from configuration file
-
 		:return: versionUVL
 		:rtype: bool
 	'''
 
 	version = "Please choose version"
-
 	config = SafeConfigParser()
+
 	for path in bpy.utils.script_paths():
 		ConfigFile = os.path.join(path,"addons","uvlayout_bridge/",configFol + "/config.ini")
 		if os.path.exists(ConfigFile):
@@ -148,7 +153,6 @@ def getCustomPath():
 	return (customPath, pathEnable, winPath)
 
 
-
 BoolProperty= bpy.types.BoolProperty
 scn = bpy.types.Scene
 
@@ -171,7 +175,6 @@ scn.uvlb_winPath = bpy.props.StringProperty(
 	default = getCustomPath()[2],
 	subtype = 'DIR_PATH',
 	update = setConfig)
-
 
 
 #-- ENUM MENUS --#
@@ -387,42 +390,50 @@ def UVL_IO():
 
 	#--Check visible objects
 	#def layers_intersect(a, b, name_a="layers", name_b=None):
+	#def layers_intersect(a, b, name_a="collections", name_b=None):
+	#	return any(l0 and l1 for l0, l1 in zip(getattr(a, name_a), getattr(b, name_b or name_a)))
 	## 2.80
-	def layers_intersect(a, b, name_a="collection", name_b=None):
-		return any(l0 and l1 for l0, l1 in zip(getattr(a, name_a), getattr(b, name_b or name_a)))
+	def find_collection(context, obj):
+		collections = obj.users_collection
+		if len(collections) > 0:
+			return collections[0]
+		return context.scene.collection
 
 	def gather_objects(scene):
 		objexcl = set()
 
 		def no_export(obj):
-#            return obj.select and (not obj.hide) and (not obj.hide_select) and layers_intersect(obj, scene) and obj.is_visible(scene)
-			return (not obj.hide_viewport) and (not obj.hide_select) and layers_intersect(obj, scene) and obj.visible_get(scene)
-		def is_selected(obj):
-			return obj.select
-		def add_obj(obj):
-			if obj not in objexcl:
-				scn.viewOnly = True
-				if scn.selOnly:
-					scn.viewOnly = False
-					if (is_selected(obj)):
-						objexcl.discard(obj)
-					print ("Objects sel only: %s" % obj)
-				else:
-					objexcl.add(obj)
-				print ("Objects include: %s" % obj)
-				return
+			return (not obj.hide_viewport) and (not obj.hide_select) and obj.visible_get() #and find_collection(bpy.context, obj)
 
-		#for obj in scene.objects:
-		for obj in scene.collection.objects:
-			if (not no_export(obj)):
-				objexcl.discard(obj)
-				continue
-			add_obj(obj)
+		def is_selected(obj):
+			#return obj.select
+			return obj.select_get()
+
+		def add_obj(obj):
+			if obj.type == 'MESH':
+				if obj not in objexcl:
+					scn.viewOnly = True
+					if scn.selOnly:
+						scn.viewOnly = False
+						if (is_selected(obj)):
+							objexcl.discard(obj)
+						print ("Objects sel only: %s" % obj)
+					else:
+						objexcl.add(obj)
+					print ("Objects include: %s" % obj)
+					return
+
+		for obj in scene.objects:
+		#for obj in scene.collection.objects:
+			if obj.type == 'MESH':
+				if (not no_export(obj)):
+					objexcl.discard(obj)
+					continue
+				add_obj(obj)
 
 		return objexcl
 
 	objexcl = gather_objects(bpy.context.scene)
-#    print ("Objects: %s" % objexcl)
 	for ob in objexcl:
 		#--Select object only visible and set selection
 		## 2.80
@@ -432,23 +443,23 @@ def UVL_IO():
 
 	#--Get selected objects---
 	for ob in bpy.context.selected_objects:
-		#---If space in name replace by underscore
-		params = [" "] #list of search parameters
-		#        [ o for o in bpy.context.scene.objects if o.active ]
-		if any(x for x in params if x in ob.name): #search for params items in object name
-			ob.name = ob.name.replace(" ","_")
-			print("OB has space: %s" % ob.name)
-			scn.spaceName = True
-
 		if ob.type == 'MESH':
+			#---If space in name replace by underscore
+			params = [" "] #list of search parameters
+			# [ o for o in bpy.context.scene.objects if o.active ]
+			if any(x for x in params if x in ob.name): #search for params items in object name
+				ob.name = ob.name.replace(" ","_")
+				scn.spaceName = True
+
+			if ob.type == 'MESH':
+				## 2.80
+				if len(ob.data.uv_layers) < bpy.context.scene.uvlb_uv_channel:
+					for n in range(bpy.context.scene.uvlb_uv_channel):
+						## 2.80
+						ob.data.uv_layers.new()
 			## 2.80
-			if len(ob.data.uv_layers) < bpy.context.scene.uvlb_uv_channel:
-				for n in range(bpy.context.scene.uvlb_uv_channel):
-					## 2.80
-					ob.data.uv_layers.new()
-		## 2.80
-		ob.data.uv_layers.active_index = (bpy.context.scene.uvlb_uv_channel - 1)
-		Objs.append(ob)
+			ob.data.uv_layers.active_index = (bpy.context.scene.uvlb_uv_channel - 1)
+			Objs.append(ob)
 
 	#---Lists buildUP---
 	#---Create and prepare objects for export---
@@ -696,8 +707,7 @@ def UVL_IO():
 			for ob in uvlObjs:
 				#bpy.data.meshes.remove(ob.data,True)
 				## 2.80
-				objD = ob.data
-				bpy.data.meshes.remove(objD, do_unlink=True)
+				bpy.data.meshes.remove(ob.data, do_unlink=True)
 
 			bpy.ops.object.select_all(action='DESELECT')
 
@@ -749,8 +759,9 @@ class UVLB_OT_Export(Operator):
 		scn.spaceName = False
 
 		## Check if object is editmode
-		if bpy.context.active_object.mode == 'EDIT':
-			bpy.ops.object.editmode_toggle()
+		if bpy.context.active_object != None:
+			if bpy.context.active_object.mode == 'EDIT':
+				bpy.ops.object.editmode_toggle()
 
 		if is_local(context):
 			self.report({'ERROR'}, "Localview Not Supported")
