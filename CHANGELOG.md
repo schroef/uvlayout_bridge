@@ -1,8 +1,65 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-ChangeLog
----------
+
+
+
+## [v0.7.1] - 2021-11-10
+# Changed
+- get path and files moved to its own function, same code was used 6 times
+
+## [v0.7.0] - 2021-11-10
+# Added
+- Export custom path now in export options panel > easier accesible
+
+# Changed
+- Better check if we cancel or send file back to Blender > returns cancel or done report in bottom
+
+## [v0.7.0 - 2021-11-06
+# Added
+- Forced reimport > when commands fails
+- Optimize options > auto drops geometry, flattens, optimizes, packs, saves and returns to Blender
+- Function to send tmp, edit & obj files to UVlayout. This allows user to easily open them, the ui from UVlayout is very outdated and tedious to work with.
+
+# Changed
+- If not mods are in mesh gray out menu option
+- If 1 UV channel in mesh hide UV layout sub panel
+- Moved panel to Tool catergory > save vertical menu from being to crowed
+
+## [v0.6.9] - 2021-11-06
+# Fixed
+- Autosave & close kept running when automation was off
+
+
+## [v0.6.8] - 2021-11-04
+# Fixed
+- Concate error in export operator > addon_prefs, "uvlb_winPath" caused error 
+- OBJ importer > global_clight_size taken out in new OBJ importer
+- bl293 'apply_as" has changed
+- Check local bool was not working properly. Added warning text, it has issues now and doen not transfering work done in UVlayout
+- Missing options for Windows multiple options were not working and added in export
+
+# Changed
+- Added split_property > new 280 layout method
+- Panel uses now sub-panel introduced in 2.80
+
+## [v0.6.7] - 20-03-20
+## Changed
+- custom properties saved to addon prefs instead of in scene
+  Mentioned by Brechts https://developer.blender.org/T74954#895043
+  https://docs.blender.org/api/current/bpy.types.AddonPreferences.html
+  Im Skipping this because i want this to be per scene
+- Changed string path to DIR_PATH
+
+## [v0.6.6] - 20-03-19
+## Fixed
+- Warning error Panel class
+
+## [0.6.5] - 2019-02-26
+### Fixed
+- Error caused by items inside collection (bl 2.80)
+- Non Mesh types where added when "selection only" was off
+
 ## [0.6.4] - 2019-01-12
 ### Changed
 - Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
@@ -73,6 +130,8 @@ ChangeLog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[0.7.1]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.1
+[0.6.5]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.5_2.80
 [0.6.4]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.4
 [0.6.3]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.3
 [0.6.2]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.2
