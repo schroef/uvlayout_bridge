@@ -1,9 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-
-
-
 ## [v0.7.1] - 2021-11-10
 # Changed
 - get path and files moved to its own function, same code was used 6 times

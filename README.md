@@ -22,6 +22,8 @@ Headus UVlayout Bridge is a <b>[Blender](https://www.blender.org)</b> add-on for
 
 >this addon requires <b>[Headus UVlayout](https://www.uvlayout.com/)</b> to be installed on the system.
 
+### Blender 2.79 
+Try this release branch for Blender 2.79: [bl279](https://github.com/schroef/uvlayout_bridge/tree/bl279)
 
 ## System Requirements
 
