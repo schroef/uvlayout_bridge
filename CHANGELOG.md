@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [v0.7.3] - 2024-07-24
+
+# Fixed
+- Export error if app path is not set, Panel shows red error with set app path option
+
 ## [v0.7.2] - 2024-07-23
 
 # Fixed
@@ -141,6 +146,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[v0.7.3]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.3
 [v0.7.2]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.2
 [v0.7.1]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.1
 [v0.6.5]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.6.5_2.80

@@ -8,6 +8,7 @@
 #   - Try scene without getConfig this is not needed as enum already loads settings
 #	- Added d2.80 support
 #	- updated user_preferences to preferences
+#   - Add warning when appPath is not set
 ####################
 
 ####################
@@ -100,25 +101,20 @@
 # Changed
 - Better check if we cancel or send file back to Blender > returns cancel or done report in bottom
 
-## v.0.7.1
-## 2021-11-10
+## v.0.7.1 - 2021-11-10
 
 # Changed
 - get path and files moved to its own function, same code was used 6 times
 
-## v.0.7.2
-## 2024-07-23
+## v.0.7.2 - 2024-07-23
 
 # Fixed
 - Changed parameter for OBJ importer and exporter.
 
-# Added
-- check for different Blender versions, they use different operators and parameters
-- Show alert for when custom path does not exist, path turns red
+## v.0.7.3 - 2024-07-24
 
-# Changed
-- info custom path is added to tooltip
-- Removed Local check, seems to be working now without issues perhaps due to new viewlayer system
+# Fixed
+- Export error if app path is not set, Panel shows red error with set app path option
 
 
 ####################
@@ -141,7 +137,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 2),
+    "version": (0, 7, 3),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -166,6 +162,34 @@ from bpy.props import StringProperty, EnumProperty, BoolProperty, IntProperty
 from bpy.types import Operator, AddonPreferences, Panel
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 from . config.registers import get_hotkey_entry_item
+
+    #---Check OS---
+#    bpy.types.Scene.osSys = EnumProperty(
+#            items = (('0', "WIN", ''),('1', "OSX", '')),
+#            name = "OS check",
+#            description="Check what OS is used",
+#            default = '0')
+    #--SYS check Enummenus --#
+scn = bpy.types.Scene
+if platform == "darwin":
+    scn.osSys = '1'
+if platform == "win32":
+    scn.osSys = '0'
+print("OS used: %s" % platform)
+
+
+
+# return addon preferences
+def get_addon_prefs(context):
+    return context.preferences.addons[__name__].preferences
+
+
+def app_path_set(context):
+    addon_prefs = get_addon_prefs(context)
+    if platform == "win32":
+        return addon_prefs.uvlb_winPath != 'Please set Application Path'
+    if platform == "darwin":
+        return addon_prefs.versionUVL != 'Please choose version'
 
 configFol = "config"
 version = "Please choose version"
@@ -404,20 +428,6 @@ scn.forced_reimport = BoolProperty(
     name = "Forced Reimport",
     default = False,
     description="Forces reimport of the out file from UVlayout. Sometimes import mismatches timing of UVlayout causing to not import proper output file.")
-
-    #---Check OS---
-#    bpy.types.Scene.osSys = EnumProperty(
-#            items = (('0', "WIN", ''),('1', "OSX", '')),
-#            name = "OS check",
-#            description="Check what OS is used",
-#            default = '0')
-    #--SYS check Enummenus --#
-scn = bpy.types.Scene
-if platform == "darwin":
-    scn.osSys = '1'
-if platform == "win32":
-    scn.osSys = '0'
-print("OS used: %s" % platform)
 
 
 def is_local(context):
@@ -822,7 +832,7 @@ def UVL_IO():
             if dropSet == 0:
 #                loadAction = 'run UVLayout|Pack|Pack All' + '\n' +'run UVLayout|Plugin|Save'
 #                loadAction = "drop \ n auto obj \n auto dxf "
-                loadAction = uvlb_mode +  uvlb_uv_mode + uvlb_uv_weld + uvlb_uv_clean + uvlb_uv_deach + uvlb_uv_geom
+                loadAction = uvlb_mode + uvlb_uv_mode + uvlb_uv_weld + uvlb_uv_clean + uvlb_uv_deach + uvlb_uv_geom
 
                 f = open(file_setName, "w+")
     #            print("Commands Sent: %s - %s" % (uvlb_mode, uvlb_uv_mode))
@@ -1223,16 +1233,22 @@ class VIEW3D_PT_panel_uvlbridge(UVLBRIDGE, Panel):
         layout = self.layout
         scn = bpy.context.scene
         obj = bpy.context.object
+        addon_prefs = get_addon_prefs(context)
+
+        if platform == "win32" and (addon_prefs.uvlb_winPath == 'Please set Application Path'):
+            layout.alert = addon_prefs.uvlb_winPath == 'Please set Application Path'
+            layout.label(text = "Application Path Headus UVLayout v2.")
+            layout.prop(addon_prefs, "uvlb_winPath", text="")
 
 
 class VIEW3D_PT_load_options(UVLBRIDGE, Panel):
     bl_label = "Load Options"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"
 
-    # @classmethod
-    # def poll(cls, context):
-    # 	# Only allow in Object mode and for a selected mesh.
-    # 	return (context.object is not None and context.object.type == "MESH")
+    @classmethod
+    def poll(cls, context):
+        # print(app_path_set(context))
+        return app_path_set(context)
 
     def draw(self, context):
         layout = self.layout
@@ -1244,11 +1260,12 @@ class VIEW3D_PT_load_options(UVLBRIDGE, Panel):
         settingsBox = layout 
         uvlbHeader = settingsBox.split(factor=0.9)
         column = uvlbHeader.column()
+
         # column.row().label(text="Load Options:")
 
         # column = uvlbHeader.column()
         # column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
-
+    
         uvlbOptions = settingsBox.split(factor=0.5)
         column = uvlbOptions.column()
         column.row().label(text="Mode:")
@@ -1277,6 +1294,10 @@ class VIEW3D_PT_load_options(UVLBRIDGE, Panel):
 class VIEW3D_PT_automation(UVLBRIDGE, Panel):
     bl_label = " Automation"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"
+
+    @classmethod
+    def poll(cls, context):
+    	return app_path_set(context)
 
     def draw_header(self, context):
         layout = self.layout
@@ -1316,7 +1337,7 @@ class VIEW3D_PT_uvchannel(UVLBRIDGE, Panel):
     @classmethod
     def poll(cls, context):
         scn = bpy.context.scene
-        return check_uv_channels(scn)
+        return check_uv_channels(scn) and app_path_set(context)
 
     def draw(self, context):
         layout = self.layout
@@ -1351,6 +1372,10 @@ def check_uv_channels(scn):
 class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
     bl_label = "OBJ Eport Options"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"	
+
+    @classmethod
+    def poll(cls, context):
+    	return app_path_set(context)
 
     def draw(self, context):
         layout = self.layout
@@ -1398,43 +1423,44 @@ class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
 
 
 def uvl_panel_operator(self,context):
-        layout = self.layout
-        #-- START EXPORT --
-        layout.scale_y = 1.25
-        # row = layout.row(align=True)
-        # col = row.column(align=True)
-        col = layout.column(align=True)
-        row = col.row(align=True)
-        row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
-        row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
-        
-        scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-        # Make this cleaner > this section is used 3x > make single functon
-        # preferences = bpy.context.preferences
-        # addon_prefs = preferences.addons[__name__].preferences
-        # scn = bpy.context.scene
-
-        # #---Variables---
-        # if platform == "win32":
-        #     UVLayoutPath = addon_prefs.uvlb_winPath
-
-        # if scn.uvlb_pathEnable:
-        #     path = scn.uvlb_customPath
-        # else:
-        #     path = "" + tempfile.gettempdir()
-
-        # path = '/'.join(path.split('\\'))
-
-        # file_outName = path + "Blender2UVLayout_TMP.out"
-        
-        # print(os.path.isfile(file_outName))
-        # print(os.path.exists(file_outName))
-        # print(file_outName)
-        ###################
-        if os.path.exists(file_outName):
-        # if os.path.isfile(file_outName):
+        if app_path_set(context):
+            layout = self.layout
+            #-- START EXPORT --
+            layout.scale_y = 1.25
+            # row = layout.row(align=True)
+            # col = row.column(align=True)
+            col = layout.column(align=True)
             row = col.row(align=True)
-            row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
+            row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
+            row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
+            
+            scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
+            # Make this cleaner > this section is used 3x > make single functon
+            # preferences = bpy.context.preferences
+            # addon_prefs = preferences.addons[__name__].preferences
+            # scn = bpy.context.scene
+
+            # #---Variables---
+            # if platform == "win32":
+            #     UVLayoutPath = addon_prefs.uvlb_winPath
+
+            # if scn.uvlb_pathEnable:
+            #     path = scn.uvlb_customPath
+            # else:
+            #     path = "" + tempfile.gettempdir()
+
+            # path = '/'.join(path.split('\\'))
+
+            # file_outName = path + "Blender2UVLayout_TMP.out"
+            
+            # print(os.path.isfile(file_outName))
+            # print(os.path.exists(file_outName))
+            # print(file_outName)
+            ###################
+            if os.path.exists(file_outName):
+            # if os.path.isfile(file_outName):
+                row = col.row(align=True)
+                row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
 
 
 #-- BRIDGE WM DIALOG POPUP MENU __#
@@ -1454,7 +1480,7 @@ class UVLAYOUT_OT_bridge(Operator):
     @classmethod
     def poll(cls, context):
         # Only allow in Object mode and for a selected mesh.
-        return (bpy.context.object is not None and bpy.context.object.type == "MESH")
+        return (bpy.context.object is not None and bpy.context.object.type == "MESH") and not app_path_set(context)
 
     def draw(self, context):
         layout = self.layout
@@ -1645,11 +1671,11 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         layout = self.layout
         scene = context.scene
 
-
         if platform == "win32":
             box=layout.box()
             split = box.split()
             col = split.column()
+            col.alert = (self.uvlb_winPath == 'Please set Application Path')
             col.label(text = "Application Path Headus UVLayout v2.")
             col.prop(self, "uvlb_winPath", text="")
             col.separator()
@@ -1657,6 +1683,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
             box=layout.box()
             split = box.split()
             col = split.column()
+            col.alert = (self.versionUVL == 'Please choose version')
             col.label(text = "Headus UVlayout Version:")
             col.prop(self,"versionUVL", text="")
             col.label(text = "* No application path settings needed on OSX")
@@ -1671,7 +1698,6 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         column.row().label(text = "Custom export path:")
         if scene.uvlb_pathEnable:
             row = column.row()
-            # Not sure why but got error here for not being string?
             row.alert = not os.path.exists(scene.uvlb_customPath)
             row.prop(scene,"uvlb_customPath", text="")
             
