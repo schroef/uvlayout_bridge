@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## v.0.7.2
+## 2024-07-23
+
+# Fixed
+- Changed parameter for OBJ importer and exporter.
+
+# Added
+- check for different Blender versions, they use different operators and parameters
+- Show alert for when custom path does not exist, path turns red
+
+# Changed
+- info custom path is added to tooltip
+- Removed Local check, seems to be working now without issues perhaps due to new viewlayer system
+
 ## [v0.7.1] - 2021-11-10
 # Changed
 - get path and files moved to its own function, same code was used 6 times

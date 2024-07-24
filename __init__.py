@@ -106,6 +106,21 @@
 # Changed
 - get path and files moved to its own function, same code was used 6 times
 
+## v.0.7.2
+## 2024-07-23
+
+# Fixed
+- Changed parameter for OBJ importer and exporter.
+
+# Added
+- check for different Blender versions, they use different operators and parameters
+- Show alert for when custom path does not exist, path turns red
+
+# Changed
+- info custom path is added to tooltip
+- Removed Local check, seems to be working now without issues perhaps due to new viewlayer system
+
+
 ####################
 ## TODO
 - Seams need to be updated after new import > 0.6.8 still shows old seams
@@ -126,7 +141,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 1),
+    "version": (0, 7, 2),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -149,7 +164,7 @@ from sys import platform
 from configparser import SafeConfigParser
 from bpy.props import StringProperty, EnumProperty, BoolProperty, IntProperty
 from bpy.types import Operator, AddonPreferences, Panel
-from bpy_extras.io_utils import (ImportHelper)
+from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 from . config.registers import get_hotkey_entry_item
 
 configFol = "config"
@@ -249,7 +264,7 @@ scn = bpy.types.Scene
 #-- GET CUSTOM PATH / OSX & WIN --#
 scn.uvlb_customPath = StringProperty(
     name="Custom Export Path",
-    description = "Choose custom path instead of temp directory.",
+    description = "Choose custom path instead of temp directory. Is saved per scene",
     subtype = 'DIR_PATH',
     default = getCustomPath()[0],
     update = setConfig)
@@ -380,10 +395,10 @@ scn.uvlb_autoCOMS = EnumProperty(
     description = "Some commands are buggy and will crash the window. You need to redo the export from Blender and try again :(",
     default = '5')
 
-scn.checkLocal = BoolProperty(
-    name = "Skip Local",
-    default = False,
-    description="If issue with localview arrises skip it. NOT RECOMMENDED! You can loose work because, sometimes causes work done not to transfer over.")
+# scn.checkLocal = BoolProperty(
+#     name = "Skip Local",
+#     default = False,
+#     description="If issue with localview arrises skip it. NOT RECOMMENDED! You can loose work because, sometimes causes work done not to transfer over.")
 
 scn.forced_reimport = BoolProperty(
     name = "Forced Reimport",
@@ -449,8 +464,11 @@ def get_path_files():
         path = "" + tempfile.gettempdir()
 
 #    path = "" + tempfile.gettempdir()
+    # print("path %s" % path)
     path = '/'.join(path.split('\\'))
 
+    if platform == "win32":
+        path = path+'/'
     file_Name = path + "Blender2UVLayout_TMP.obj"
     file_outName = path + "Blender2UVLayout_TMP.out"
     file_setName = path +"Blender2UVLayout_TMP.set"
@@ -473,7 +491,8 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
     # print("isosfile file_name == true: %s" % os.path.isfile(file_outName) == True)
     if os.path.isfile(file_outName) == True:
     #time.sleep(1)
-        bpy.ops.import_scene.obj(filepath = file_outName,
+        if bpy.app.version[0] < 3:
+            bpy.ops.import_scene.obj(filepath = file_outName,
                                 axis_forward = 'Y',
                                 axis_up = 'Z',
                                 filter_glob = "*.obj;*.mtl",
@@ -484,38 +503,54 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
                                 use_groups_as_vgroups = True,
                                 use_image_search = False,
                                 split_mode = 'ON',
-                                ### TYPO???
-                                # Not needed bl293
-                                # global_clight_size = 0
                                 )
 
+        #bl 4.0
+        if bpy.app.version[0] == 4 and bpy.app.version[1] >= 0:
+            bpy.ops.wm.obj_import(filepath = file_outName,
+                                forward_axis = 'Y',
+                                up_axis = 'Z',
+                                filter_glob = "*.obj;*.mtl",
+                                use_split_objects = True,
+                                use_split_groups = True,
+                                import_vertex_groups  = True,
+                                )
+
+        # print("IMPORT OBJ")
         #---Close UVLAYOUT ---
         f = open(file_cmdName, "w+")
         f.write(''.join([uvl_exit_str]))
         f.close()
 
+        # print("Transfer UVs and CleanUP")
         #---Transfer UVs and CleanUP---
         for ob in bpy.context.selected_objects:
             uvlObjs.append(ob)
 
         bpy.ops.object.select_all(action='DESELECT')
 
+        # print("JOIN UVS")
         for ob in uvlObjs:
-            # print(ob.name)
-            #---Get source object name
-            refName=ob.name.split('__UVL')
-            #---Select source object---
-            ## 2.80
-            bpy.data.objects[refName[0]].select_set(state=True)
-            #---Select UVL object
-            ## 2.80
-            bpy.context.view_layer.objects.active = bpy.data.objects[ob.name]
-            #---Transfer UVs from UVL object to Source object
-            bpy.ops.object.join_uvs()
-            bpy.ops.object.select_all(action='DESELECT')
+            try:
+                # print(ob.name)
+                #---Get source object name
+                refName=ob.name.split('__UVL')
+                #---Select source object---
+                ## 2.80
+                bpy.data.objects[refName[0]].select_set(state=True)
+                #---Select UVL object
+                ## 2.80
+                bpy.context.view_layer.objects.active = bpy.data.objects[ob.name]
+                #---Transfer UVs from UVL object to Source object
+                bpy.ops.object.join_uvs()
+                bpy.ops.object.select_all(action='DESELECT')
+            except Exception as error:
+                print("[DEBUG ]UVleayout Error: %s" % error)
+
 
         bpy.ops.object.select_all(action='DESELECT')
 
+        # print("REMOVE IMPORTED MESH")
         for ob in uvlObjs:
             # print("remove ob UVL: %s" % ob.name)
             # print("remove ob data UVL: %s" %  ob.data.name)
@@ -525,6 +560,7 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
 
         bpy.ops.object.select_all(action='DESELECT')
 
+        # print("SET MODES MESH OBJECT")
         for ob in Objs:
             #---Make new seams
             ## 2.80
@@ -643,7 +679,7 @@ def UVL_IO():
                     scn.collection.objects.link(newObj)
                 if mod.type == 'SUBSURF':
                     print ("Obj Name: %s - Mod Applied: %s" % (ob.name, mod.type))
-                    print(bpy.app.version[1])
+                    # print(bpy.app.version[1])
                     if bpy.app.version[1] >= 90:
                         bpy.ops.object.modifier_apply(modifier="Subsurf")
                     else:
@@ -680,9 +716,11 @@ def UVL_IO():
         bpy.data.objects[ob.name].select_set(state=True)
 
 
+    # print(bpy.app.version)
     #---EXPORT---
     print("Export File:%s" % (file_Name))
-    bpy.ops.export_scene.obj(filepath=file_Name,
+    if bpy.app.version[0] < 3:
+        bpy.ops.export_scene.obj(filepath=file_Name,
                                 check_existing = True,
                                 axis_forward = 'Y',
                                 axis_up = 'Z',
@@ -706,6 +744,32 @@ def UVL_IO():
                                 keep_vertex_order = True,
                                 global_scale = 1,
                                 path_mode = 'AUTO')
+    
+    # bl 4.0
+    # https://docs.blender.org/api/current/bpy.ops.wm.html#bpy.ops.wm.obj_export
+    if bpy.app.version[0] == 4 and bpy.app.version[1] >= 0:
+        bpy.ops.wm.obj_export(filepath=file_Name,
+                                check_existing = True,
+                                forward_axis = 'Y',
+                                up_axis = 'Z',
+                                filter_glob = "*.obj;*.mtl",
+                                export_animation = False,
+                                apply_modifiers = scn.appMod,
+                                export_selected_objects = scn.selOnly,
+                                export_uv = True,
+                                export_normals = True,
+                                export_colors = True,
+                                export_materials = True,
+                                export_triangulated_mesh = False,
+                                export_curves_as_nurbs = False,
+                                export_object_groups = True,
+                                export_material_groups = False,
+                                export_vertex_groups = False,
+                                export_smooth_groups = False,
+                                smooth_group_bitflags = False,
+                                global_scale = 1,
+                                path_mode = 'AUTO')
+
     #--Reset Sel only
     if scn.viewOnly:
         scn.selOnly = False
@@ -785,7 +849,12 @@ def UVL_IO():
         # cmd = f'"{tar_exe}" -tf "{image_file}"'
         # cmd = f'{UVLayoutPath}uvlayout.exe -log -plugin, {uvlb_mode}{uvlb_uv_mode}{uvlb_uv_weld}{uvlb_uv_clean}{uvlb_uv_deach}{uvlb_uv_geom}{file_Name}'
         # print(cmd)
+
+        # versionUVL = getattr(addon_prefs, "versionUVL")
         # uvlayout_proc = subprocess.Popen(args=[cmd], shell=True)
+        # uvlayoutpath =  'C:/program files \9x86\)/headus UVlayout v2'+versionUVL+'/uvlayout.exe'
+        # uvlayout_proc = subprocess.Popen(args=[UVLayoutPath, '-plugin,' + uvlb_mode + uvlb_uv_mode + uvlb_uv_weld + uvlb_uv_clean + uvlb_uv_deach + uvlb_uv_geom, file_Name])
+
         uvlayout_proc = subprocess.Popen(args=[UVLayoutPath + 'uvlayout.exe', '-plugin,' + uvlb_mode + uvlb_uv_mode + uvlb_uv_weld + uvlb_uv_clean + uvlb_uv_deach + uvlb_uv_geom, file_Name])
 
     dropCom = 0
@@ -862,7 +931,7 @@ def UVL_IO():
         if os.path.isfile(file_outName):
             # print(os.path.isfile(file_outName))
             # print(file_outName)
-            # print("TMP output excist - Headus perhaps still open")
+            # print("TMP output exists - Headus perhaps still open")
             scn.forced_reimport = True
         else:
             scn.forced_reimport = False
@@ -917,10 +986,11 @@ class UVLB_OT_Export(Operator):
             if bpy.context.active_object.mode == 'EDIT':
                 bpy.ops.object.editmode_toggle()
 
-        if not scn.checkLocal:
-            if is_local(context):
-                self.report({'ERROR'}, "Localview Not Supported")
-                return {'FINISHED'}
+        # Seems to be working now
+        # if not scn.checkLocal:
+        #     if is_local(context):
+        #         self.report({'ERROR'}, "Localview Not Supported")
+        #         return {'FINISHED'}
         #-- OSX check if application is chosen correct
         if platform == "darwin":
             versionUVL = getattr(addon_prefs, "versionUVL")
@@ -951,30 +1021,6 @@ class UVLB_OT_Export(Operator):
 
 def UVL_forced_reimport(context):
     scn, addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-#     preferences = bpy.context.preferences
-#     addon_prefs = preferences.addons[__name__].preferences
-#     scn = bpy.context.scene
-
-#     #---Variables---
-#     if platform == "win32":
-#         UVLayoutPath = addon_prefs.uvlb_winPath
-
-#     if scn.uvlb_pathEnable:
-#         path = scn.uvlb_customPath
-#     else:
-#         path = "" + tempfile.gettempdir()
-
-# #    path = "" + tempfile.gettempdir()
-#     path = '/'.join(path.split('\\'))
-
-#     file_Name = path + "Blender2UVLayout_TMP.obj"
-#     file_outName = path + "Blender2UVLayout_TMP.out"
-#     # keep is the backup when importing into uvl
-#     # file_outName = path + "Blender2UVLayout_TMP.keep"
-#     file_setName = path +"Blender2UVLayout_TMP.set"
-#     file_cmdName = path + "Blender2UVLayout_TMP.cmd"
-#     file_commands = "subd"
-#     uvl_exit_str = "exit"
 
     #-- IMPORT OBJ BACK TO BLENDER --
     import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
@@ -991,23 +1037,6 @@ class UVLB_OT_Forced_Reimport(Operator):
     @classmethod
     def poll(cls, context):
         scn, addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-    #     scn = context.scene
-    #     # return scn.forced_reimport
-    #     preferences = bpy.context.preferences
-    #     addon_prefs = preferences.addons[__name__].preferences
-    #     scn = bpy.context.scene
-
-    #     #---Variables---
-    #     if platform == "win32":
-    #         UVLayoutPath = addon_prefs.uvlb_winPath
-
-    #     if scn.uvlb_pathEnable:
-    #         path = scn.uvlb_customPath
-    #     else:
-    #         path = "" + tempfile.gettempdir()
-
-    # #    path = "" + tempfile.gettempdir()
-    #     path = '/'.join(path.split('\\'))
 
         # file_outName = path + "Blender2UVLayout_TMP.out"
         return os.path.isfile(file_outName) or scn.forced_reimport
@@ -1026,41 +1055,38 @@ class UVLB_OT_Forced_Reimport(Operator):
         return {'FINISHED'}
 
 
-class UVLB_OT_Send_TempEdit_File(bpy.types.Operator, ImportHelper):
+class UVLB_OT_Send_TempEdit_File(bpy.types.Operator, ExportHelper):
     """Function to send tmp, edit & obj files to UVlayout. This allows user to easily open them, the ui from UVlayout is very outdated and tedious to work with."""
     bl_idname = "uvlb.send_tmpedit"
     bl_label = "Send to UVL"
 
-    filename_ext = "*.uvl;*.obj;*.ply;"
     filter_glob: StringProperty(
         # default="DIR_PATH",
         default="*.uvl;*.obj;*.ply;",
         options={'HIDDEN'}, )
+    
+    # filename_ext = "*.uvl;*.obj;*.ply;"
+    filename_ext: EnumProperty(
+        name="Example Enum",
+        description="Choose between two items",
+        items=(
+            ('.uvl', "*.uvl", "UVlayout data file"),
+            ('.obj', ".obj", "OBJ file"),
+            ('.ply', ".ply", "PLY file"),
+        ),
+        default='.uvl',
+    )
+    filename = 'test.uvl'
+
 
     def execute(self, context):
         scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
         # preferences = bpy.context.preferences
         # addon_prefs = preferences.addons[__name__].preferences
         # scn = bpy.context.scene
-
+        filename = self.filename
         # reset forced reimport
         scn.forced_reimport = False
-
-    #     #---Variables---
-    #     if platform == "win32":
-    #         UVLayoutPath = addon_prefs.uvlb_winPath
-
-        
-    #     if scn.uvlb_pathEnable:
-    #         path = scn.uvlb_customPath
-    #     else:
-    #         path = "" + tempfile.gettempdir()
-
-    # #    path = "" + tempfile.gettempdir()
-    #     path = '/'.join(path.split('\\'))
-    #     # print("## File %s" % self.filepath)
-
-    #     file_setName = path +"Blender2UVLayout_TMP.set"
 
         #-Set uvLayout mode
         if (bpy.context.scene.uvlb_mode == '0'):
@@ -1116,24 +1142,7 @@ class UVLB_OT_Send_TempEdit_File(bpy.types.Operator, ImportHelper):
         
         if platform == "win32":
             subprocess.Popen(args=[UVLayoutPath + 'uvlayout.exe', '-plugin,' + uvlb_mode + uvlb_uv_mode + uvlb_uv_weld + uvlb_uv_clean + uvlb_uv_deach + uvlb_uv_geom, self.filepath])
-        # subprocess.Popen(args=[UVLayoutPath + 'uvlayout.exe', '-plugin,' + self.filepath])
-        # uvlayout_proc = subprocess.Popen(args=[UVLayoutPath + 'uvlayout.exe', '-plugin,' + self.filepath])
-        # Import tmp edit file is not good, file does have OBJ structure
-        # bpy.ops.import_scene.obj(filepath = self.filepath,
-        #                 axis_forward = 'Y',
-        #                 axis_up = 'Z',
-        #                 filter_glob = "*.obj;*.mtl",
-        #                 use_edges = False,
-        #                 use_smooth_groups = False,
-        #                 use_split_objects = True,
-        #                 use_split_groups = True,
-        #                 use_groups_as_vgroups = True,
-        #                 use_image_search = False,
-        #                 split_mode = 'ON',
-        #                 # Not needed bl293
-        #                 # global_clight_size = 0
-        #                         )
-
+        
         return {'FINISHED'}
 
 #
@@ -1364,11 +1373,12 @@ class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
         if scn.appMod:
             column.row().label(text="Create Backup")
             column.row().label(text="Subsurf will be applied, backup?", icon='INFO')
-        column.row().label(text="Skip localview check")
+        # column.row().label(text="Skip localview check")
         column.row().label(text="Custom path")
         if scn.uvlb_pathEnable:
-            column.row().prop(scn,"uvlb_customPath", text="")
-            column.row().label(text = "Saved per scene", icon='INFO')
+            row = column.row()
+            row.alert = not os.path.exists(scn.uvlb_customPath)
+            row.prop(scn,"uvlb_customPath", text="")
 
         # Column Right
         column = objBox.column()
@@ -1380,11 +1390,11 @@ class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
         if scn.appMod:
             column.row().prop(scn,"cloneOb", text="")
             column.row().label(text="")
-        column.row().prop(scn,"checkLocal", text="")
+        # column.row().prop(scn,"checkLocal", text="")
         column.row().prop(scn,"uvlb_pathEnable", text="")
-        if scn.uvlb_pathEnable:
-            column.row().label(text = "")
-            column.row().label(text = "")
+        # if scn.uvlb_pathEnable:
+        #     column.row().label(text = "")
+        #     column.row().label(text = "")
 
 
 def uvl_panel_operator(self,context):
@@ -1417,8 +1427,12 @@ def uvl_panel_operator(self,context):
 
         # file_outName = path + "Blender2UVLayout_TMP.out"
         
+        # print(os.path.isfile(file_outName))
+        # print(os.path.exists(file_outName))
+        # print(file_outName)
         ###################
-        if os.path.isfile(file_outName):
+        if os.path.exists(file_outName):
+        # if os.path.isfile(file_outName):
             row = col.row(align=True)
             row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
 
@@ -1534,11 +1548,14 @@ class UVLAYOUT_OT_bridge(Operator):
         if scn.appMod:
             column.row().label(text="Create Backup")
             column.row().label(text="Subsurf will be applied, backup?", icon='ERROR')
-        column.row().label(text="Skip localview check")
+        # column.row().label(text="Skip localview check")
         column.row().label(text="Custom path")
         if scn.uvlb_pathEnable:
-            column.row().prop(scn,"uvlb_customPath", text="")
-            column.row().label(text = "Saved per scene", icon='INFO')
+            # scn.uvlb_customPath = "C:/Users/romboutversluijs/Desktop/_Blender/Export/headus_uvlayoutsssss"
+            row = column.row()
+            row.alert = not os.path.exists(scn.uvlb_customPath)
+            row.prop(scn,"uvlb_customPath", text="")
+            # column.row().label(text = "Saved per scene", icon='INFO')
 
         # Column Right
         column = objBox.column()
@@ -1551,11 +1568,11 @@ class UVLAYOUT_OT_bridge(Operator):
         if scn.appMod:
             column.row().prop(scn,"cloneOb", text="")
             column.row().label(text="")
-        column.row().prop(scn,"checkLocal", text="")
+        # column.row().prop(scn,"checkLocal", text="")
         column.row().prop(scn,"uvlb_pathEnable", text="")
-        if scn.uvlb_pathEnable:
-            column.row().label(text = "")
-            column.row().label(text = "")
+        # if scn.uvlb_pathEnable:
+        #     column.row().label(text = "")
+        #     column.row().label(text = "")
 
         #---Send button---
         layout.scale_y = 1.25
@@ -1648,14 +1665,19 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         col.separator()
         #-- CUSTOM EXPORT PATH --
         expBut = layout.box()
-        expBut = expBut.split(factor=0.95)
+        # expBut = expBut.split(factor=0.95)
 
         column = expBut.column()
         column.row().label(text = "Custom export path:")
         if scene.uvlb_pathEnable:
-            column.row().prop(scene, "uvlb_customPath", text="")
-            column.row().label(text = "Path will be saved per scene")
-            column.separator()
+            row = column.row()
+            # Not sure why but got error here for not being string?
+            row.alert = not os.path.exists(scene.uvlb_customPath)
+            row.prop(scene,"uvlb_customPath", text="")
+            
+            # column.row().prop(scene, "uvlb_customPath", text="")
+            # column.row().label(text = "Path will be saved per scene")
+            # column.separator()
 
         column = expBut.column()
         column.row().prop(scene,"uvlb_pathEnable", text="")
