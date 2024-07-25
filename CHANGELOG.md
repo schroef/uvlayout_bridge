@@ -2,13 +2,22 @@
 All notable changes to this project will be documented in this file.
 
 
-## [v0.7.3] - 2024-07-24
+## [v0.7.4] - 2024-07-25
+# Fixed
+- Automation Optimize, didnt do anything code fixed
+- Show warning when exporting and custom path doesnt exist or is wrong
 
+# Changed
+- Code cleanup
+- Panel design is using split_property ala 2.8 Design
+- Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
+- Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
+
+## [v0.7.3] - 2024-07-24
 # Fixed
 - Export error if app path is not set, Panel shows red error with set app path option
 
 ## [v0.7.2] - 2024-07-23
-
 # Fixed
 - Changed parameter for OBJ importer and exporter.
 
@@ -146,6 +155,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[v0.7.4]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.4
 [v0.7.3]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.3
 [v0.7.2]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.2
 [v0.7.1]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.1

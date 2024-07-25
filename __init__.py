@@ -9,6 +9,7 @@
 #	- Added d2.80 support
 #	- updated user_preferences to preferences
 #   - Add warning when appPath is not set
+#   - Auto save shows CANCELLED but does work
 ####################
 
 ####################
@@ -111,11 +112,22 @@
 # Fixed
 - Changed parameter for OBJ importer and exporter.
 
-## v.0.7.3 - 2024-07-24
+## [v0.7.3] - 2024-07-24
 
 # Fixed
 - Export error if app path is not set, Panel shows red error with set app path option
 
+## [v0.7.4] - 2024-07-25
+
+# Fixed
+- Automation Optimize, didnt do anything code fixed
+- Show warning when exporting and custom path doesnt exist or is wrong
+
+# Changed
+- Code cleanup
+- Panel design is using split_property ala 2.8 Design
+- Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
+- Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
 
 ####################
 ## TODO
@@ -137,7 +149,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 3),
+    "version": (0, 7, 4),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -183,13 +195,16 @@ print("OS used: %s" % platform)
 def get_addon_prefs(context):
     return context.preferences.addons[__name__].preferences
 
-
 def app_path_set(context):
     addon_prefs = get_addon_prefs(context)
     if platform == "win32":
         return addon_prefs.uvlb_winPath != 'Please set Application Path'
     if platform == "darwin":
         return addon_prefs.versionUVL != 'Please choose version'
+
+def customPath_exists(context):
+    scn = context.scene
+    return os.path.exists(scn.uvlb_customPath)
 
 configFol = "config"
 version = "Please choose version"
@@ -200,7 +215,7 @@ def setConfig(self, context):
         :param context: context
     '''
     preferences = context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = get_addon_prefs(context)
 
     version = getattr(addon_prefs, "versionUVL", "")
     customPath = getattr(context.scene, "uvlb_customPath", "")
@@ -248,7 +263,7 @@ def getCustomPath():
 
     customPath = "Please set path"
     pathEnable = False
-    winPath = "Please set path"
+    winPath = "Please set Application Path"
 
     config = SafeConfigParser()
     for path in bpy.utils.script_paths():
@@ -262,7 +277,7 @@ def getCustomPath():
             except:
                 customPath = "Please set path"
                 pathEnable = False
-                winPath = "Please set path"
+                winPath = "Please set Application Path"
 
     return (customPath, pathEnable, winPath)
 
@@ -282,19 +297,18 @@ def updateIcon(self, context):
 
 
 # Props
-# BoolProperty= bpy.types.BoolProperty
 scn = bpy.types.Scene
 
 #-- GET CUSTOM PATH / OSX & WIN --#
 scn.uvlb_customPath = StringProperty(
-    name="Custom Export Path",
-    description = "Choose custom path instead of temp directory. Is saved per scene",
+    name="Custom Path",
+    description = "Choose custom export  path instead of temp directory. Is saved per scene",
     subtype = 'DIR_PATH',
     default = getCustomPath()[0],
     update = setConfig)
 
 scn.uvlb_pathEnable = BoolProperty(
-    name="Path Enable",
+    name="Custom Path",
     description = "Choose custom path instead of temp",
     default = getCustomPath()[1],
     update = setConfig)
@@ -303,7 +317,7 @@ scn.uvlb_pathEnable = BoolProperty(
 #-- BRIDGE ADDON OPTIONS --#
 #---UV Channel selector---
 scn.uvlb_uv_channel = IntProperty(
-    name = "UV channel",
+    name = "Map",
     description = "Select a UV channel for editing in export.",
     default = 1,
     min = 1,
@@ -362,7 +376,7 @@ scn.uvlb_mode = EnumProperty(
 
 scn.uvlb_uv_mode = EnumProperty(
     items = (('0', "New", ''),('1', "Edit", '')),
-    name = "UV",
+    name = "UV Mode",
     description = "If your mesh already has UVs and you want to reflatten them to reduce distortion, select Edit. Otherwise, select New to delete any existing UVs and start with a clean slate.",
     default = '0',
     update=updateIcon)
@@ -414,10 +428,11 @@ scn.uvlb_help = BoolProperty(
 
 scn.uvlb_autoCOMS = EnumProperty(
 #    items = (('1', "Drop", ''),('2', "Flatten", ''),('3', "Optimize", ''),('4', "Drop-Flatten-Optimize", ''),('5', "Pack", ''),('6', "Drop-Flatten-Optimize-Pack", '')),
-    items = (('5', "Pack", ''),('6', "Drop-Flatten-Optimize-Pack", '')),
-    name = "Automation Commands",
-    description = "Some commands are buggy and will crash the window. You need to redo the export from Blender and try again :(",
-    default = '5')
+    items = (('0', "Choose", 'Choose'),('1', "Pack", 'Packs all UVs'),('2', "Optimize", 'Flatten, optimizes and packs')),
+    name = "Commands",
+    description = "Some of the options you can check under \"Pack\", will cause an error. Some commands are buggy and will crash the window. You need to redo the export from Blender and try again :(",
+    default = '0')
+    # default = '0')
 
 # scn.checkLocal = BoolProperty(
 #     name = "Skip Local",
@@ -445,11 +460,6 @@ def is_local(context):
         else:
             pass
 
-#    if ob.layers_local_view[0]:
-#        return True
-#    else:
-#        return False
-
 def CheckSelection():
     objSelected = False
     if bpy.context.selected_objects != []:
@@ -458,7 +468,7 @@ def CheckSelection():
 
 def get_path_files():
     preferences = bpy.context.preferences
-    addon_prefs = preferences.addons[__name__].preferences
+    addon_prefs = get_addon_prefs(bpy.context)
     scn = bpy.context.scene
 
 
@@ -690,7 +700,7 @@ def UVL_IO():
                 if mod.type == 'SUBSURF':
                     print ("Obj Name: %s - Mod Applied: %s" % (ob.name, mod.type))
                     # print(bpy.app.version[1])
-                    if bpy.app.version[1] >= 90:
+                    if bpy.app.version[0] >= 3 or (bpy.app.version[0] >= 2 and bpy.app.version[1] >= 90):
                         bpy.ops.object.modifier_apply(modifier="Subsurf")
                     else:
                         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subdivision")
@@ -880,6 +890,10 @@ def UVL_IO():
                 print("Commands Send")
                 comm = ''
                 # Not used fo now
+                if scn.uvlb_autoCOMS == '1':
+                    comm = 'run UVLayout|Pack|Pack All'
+                if scn.uvlb_autoCOMS == '2':
+                    comm = 'auto'
                 # if scn.uvlb_autoCOMS == '1':
                 #     comm = 'drop \n run UVLayout|Pack|Pack All'
                 # if scn.uvlb_autoCOMS == '2':
@@ -893,11 +907,14 @@ def UVL_IO():
                 # if scn.uvlb_autoCOMS == '6':
                 #     comm = 'drop \n auto obj \n auto dxf \n run UVLayout|Pack|Pack All'
 
-                if scn.uvlb_autoPack:
-                    comm = 'run UVLayout|Pack|Pack All'
+                # if scn.uvlb_autoPack:
+                #     comm = 'run UVLayout|Pack|Pack All'
                 
-                if scn.uvlb_autoOptimize:
-                    comm = 'run UVLayout|Auto|Pack\Pack All'
+                # if scn.uvlb_autoOptimize:
+                #     comm = 'auto'
+                    # 2024-07-24d
+                    # NOTE some settings in packing will cause error if set
+                    # comm = 'run UVLayout|Auto|Pack\Pack All'
                     # comm = 'Auto obj'
                     # comm = 'Auto obj'
 #                comm = 'drop \ n auto obj'
@@ -986,7 +1003,7 @@ class UVLB_OT_Export(Operator):
 
     def execute(self, context):
         preferences = context.preferences
-        addon_prefs = preferences.addons[__name__].preferences
+        addon_prefs = get_addon_prefs(context)
 
         scn = bpy.context.scene
         scn.spaceName = False
@@ -1007,12 +1024,16 @@ class UVLB_OT_Export(Operator):
             if os.path.isfile('/Applications/headus-UVLayout-'+versionUVL+'.app/Contents/MacOS/uvlayout-plugin') == False:
                 info = "Wrong UVlayout version in addon settings"
                 self.report({'ERROR'}, info)
-                return {'FINISHED'}
+                return {'CANCELLED'}
 
         if scn.selOnly:
             if (CheckSelection() == False):
                 self.report({'ERROR'}, "Nothing selected")
-                return {'FINISHED'}
+                return {'CANCELLED'}
+
+        if scn.uvlb_pathEnable and not os.path.exists(scn.uvlb_customPath):
+            self.report({'ERROR'}, "Custom Path can't be found or doesnt exist. Please check path")
+            return {'CANCELLED'}
 
         #-- Run export eaction
         result = UVL_IO()
@@ -1053,7 +1074,7 @@ class UVLB_OT_Forced_Reimport(Operator):
 
     def execute(self, context):
         preferences = context.preferences
-        addon_prefs = preferences.addons[__name__].preferences
+        addon_prefs = get_addon_prefs(context)
 
         scn = bpy.context.scene
         scn.spaceName = False
@@ -1092,7 +1113,7 @@ class UVLB_OT_Send_TempEdit_File(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
         # preferences = bpy.context.preferences
-        # addon_prefs = preferences.addons[__name__].preferences
+        # addon_prefs = get_addon_prefs(context)
         # scn = bpy.context.scene
         filename = self.filename
         # reset forced reimport
@@ -1155,60 +1176,6 @@ class UVLB_OT_Send_TempEdit_File(bpy.types.Operator, ExportHelper):
         
         return {'FINISHED'}
 
-#
-# 
-#  
-# TODO
-        # See if we want split_property > it looks awful!!!
-        # layout.use_property_split = True
-        # layout.use_property_decorate = False
-
-        # #-- UVLAYOUT LOAD OPTIONS --
-        # settingsBox = layout.box()
-        # uvlbHeader = settingsBox.split(factor=0.9)
-        # column = uvlbHeader.column()
-        # column.row().label(text="Load Options:")
-
-        # column = uvlbHeader.column()
-        # column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
-
-        # column = settingsBox.column()
-        # column.row().prop(scn, "uvlb_mode", icon = getattr(scn,"iconMode",2))
-        # column.row().prop(scn, "uvlb_uv_mode", icon = getattr(scn,"iconUVMode",2))
-
-        # column.row().prop(scn, "uvlb_uv_weld")
-        # column.row().prop(scn, "uvlb_uv_detach")
-        # if (getattr(scn, "uvlb_uv_mode",) == '0'):
-        # 	column.row().prop(scn, "uvlb_uv_clean")
-        # 	# uvlbOptions.prop(scn, "uvlb_uv_geom") #Destroys linking import- triangulates the mesh
-
-        # #-- QUICK COMMANDS --#
-        # column = layout.box()
-
-        # # column = uvlbAutoCom.column()
-        # column.row().prop(scn, "uvlb_autoComm")
-        # if scn.uvlb_autoComm:
-        # 	column.row().prop(scn, "uvlb_autoPack")
-        # 	column.row().prop(scn, "uvlb_autoSave")
-
-        # #-- UVMAPS --
-        # uvMapChannel = layout.box()
-        # uvMapChannel.prop(scn, "uvlb_uv_channel", icon="GROUP_UVS")
-
-        # #-- OBJ EXPORT options --
-        # objBox = layout.box()
-
-
-        # column = objBox.column()
-        # column.row().label(text="")
-        # column.row().prop(scn,"selOnly")
-        # column.row().prop(scn,"appMod")
-        # if scn.appMod:
-        # 	column.row().prop(scn,"cloneOb", icon='ERROR')
-        # 	column.row().label(text="Skip localview check")
-        # column.row().prop(scn,"checkLocal")
-
-
 
 #-- BRIDGE PANEL TOOL TAB __#
 class UVLBRIDGE(Panel):
@@ -1231,6 +1198,8 @@ class VIEW3D_PT_panel_uvlbridge(UVLBRIDGE, Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
         scn = bpy.context.scene
         obj = bpy.context.object
         addon_prefs = get_addon_prefs(context)
@@ -1241,6 +1210,7 @@ class VIEW3D_PT_panel_uvlbridge(UVLBRIDGE, Panel):
             layout.prop(addon_prefs, "uvlb_winPath", text="")
 
 
+#-- UVLAYOUT LOAD OPTIONS --#
 class VIEW3D_PT_load_options(UVLBRIDGE, Panel):
     bl_label = "Load Options"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"
@@ -1249,48 +1219,31 @@ class VIEW3D_PT_load_options(UVLBRIDGE, Panel):
     def poll(cls, context):
         # print(app_path_set(context))
         return app_path_set(context)
-
+    
     def draw(self, context):
         layout = self.layout
         scn = bpy.context.scene
+        if scn.uvlb_pathEnable:
+            layout.enabled = customPath_exists(context)
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
         obj = bpy.context.object
 
-        #-- UVLAYOUT LOAD OPTIONS --
-        # settingsBox = layout.box()
         settingsBox = layout 
-        uvlbHeader = settingsBox.split(factor=0.9)
-        column = uvlbHeader.column()
+        column = settingsBox.column()
 
-        # column.row().label(text="Load Options:")
+        column.row().prop(scn, "uvlb_mode", icon = getattr(scn,"iconMode",2))
+        column.row().prop(scn, "uvlb_uv_mode", icon = getattr(scn,"iconUVMode",2))
 
-        # column = uvlbHeader.column()
-        # column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
-    
-        uvlbOptions = settingsBox.split(factor=0.5)
-        column = uvlbOptions.column()
-        column.row().label(text="Mode:")
-        column.row().label(text="Uv Mode:")
-
-        column = uvlbOptions.column()
-        column.row().prop(scn, "uvlb_mode", text="",icon = getattr(scn,"iconMode",2))
-        column.row().prop(scn, "uvlb_uv_mode", text="",icon = getattr(scn,"iconUVMode",2))
-
-        uvlbOptions = settingsBox.split(factor=0.9)
-        column = uvlbOptions.column()
-        column.row().label(text="Weld UVs")
-        column.row().label(text="Detach Flipped UV's")
+        column.row().prop(scn, "uvlb_uv_weld")
+        column.row().prop(scn, "uvlb_uv_detach")
         if (getattr(scn, "uvlb_uv_mode",) == '0'):
-            column.row().label(text="Clean")
-
-        column = uvlbOptions.column()
-        column.row().prop(scn, "uvlb_uv_weld", text="")
-        column.row().prop(scn, "uvlb_uv_detach", text="")
-        if (getattr(scn, "uvlb_uv_mode",) == '0'):
-            column.row().prop(scn, "uvlb_uv_clean", text="")
+            column.row().prop(scn, "uvlb_uv_clean")
             # uvlbOptions.prop(scn, "uvlb_uv_geom") #Destroys linking import- triangulates the mesh
 
 
 
+#-- QUICK COMMANDS --#
 class VIEW3D_PT_automation(UVLBRIDGE, Panel):
     bl_label = " Automation"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"
@@ -1307,29 +1260,23 @@ class VIEW3D_PT_automation(UVLBRIDGE, Panel):
     def draw(self, context):
         layout = self.layout
         scn = bpy.context.scene
+        if scn.uvlb_pathEnable:
+            layout.enabled = customPath_exists(context)
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
         obj = bpy.context.object
 
-        #-- QUICK COMMANDS --#
-        # settingsBox = layout.box()
         settingsBox = layout
-        uvlbAutoCom = settingsBox.split(factor=0.9)
-        column = uvlbAutoCom.column()
-        # column.row().label(text="Automation:")
+        column = settingsBox.column()
+
         if scn.uvlb_autoComm:
-            column.row().label(text="Auto-Pack")
-            if scn.uvlb_autoPack:
-                column.row().label(text="Save & Return")
-            column.row().label(text="Optimize")
-
-        column = uvlbAutoCom.column()
-        # column.row().prop(scn, "uvlb_autoComm", text="")
-        if scn.uvlb_autoComm:
-            column.row().prop(scn, "uvlb_autoPack", text="")
-            if scn.uvlb_autoPack:
-                column.row().prop(scn, "uvlb_autoSave", text="")
-            column.row().prop(scn, "uvlb_autoOptimize", text="")
+            column.row().prop(scn, "uvlb_autoCOMS")
+            autosave = column.row()
+            autosave.enabled = scn.uvlb_autoCOMS != '0'
+            autosave.prop(scn, "uvlb_autoSave")
 
 
+#-- UVMAPS --#
 class VIEW3D_PT_uvchannel(UVLBRIDGE, Panel):
     bl_label = "UV Channel"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"
@@ -1342,15 +1289,15 @@ class VIEW3D_PT_uvchannel(UVLBRIDGE, Panel):
     def draw(self, context):
         layout = self.layout
         scn = bpy.context.scene
+        if scn.uvlb_pathEnable:
+            layout.enabled = customPath_exists(context)
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
         obj = bpy.context.object
 
-        #-- UVMAPS --
-        # uvMapBox = layout.box()
         uvMapBox = layout
         uvMapChannel = uvMapBox.row()
-        uvMapChannel = uvMapChannel.split(factor=0.5)
-        uvMapChannel.label(text="UV Channel:", icon="GROUP_UVS")
-        uvMapChannel.prop(scn, "uvlb_uv_channel", text="")
+        uvMapChannel.prop(scn, "uvlb_uv_channel", icon="GROUP_UVS")
 
 def check_for_mods(scn):
     #--Get selected objects---
@@ -1369,6 +1316,7 @@ def check_uv_channels(scn):
                 return True
     return False
 
+#-- OBJ EXPORT options --#
 class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
     bl_label = "OBJ Eport Options"
     bl_parent_id = "VIEW3D_PT_panel_uvlbridge"	
@@ -1380,270 +1328,49 @@ class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
     def draw(self, context):
         layout = self.layout
         scn = bpy.context.scene
+        if scn.uvlb_pathEnable:
+            layout.enabled = customPath_exists(context)
+        layout.use_property_split = True
+        layout.use_property_decorate = False  # No animation.
         obj = bpy.context.object
 
-        #-- OBJ EXPORT options --
-        # objBox = layout.box()
-        objBox = layout
-        objBox = objBox.split(factor=0.9)
-
-        # Column Left
-        column = objBox.column()
-        # column.row().label(text="OBJ Export Settings:")
-        column.row().label(text="Selection Only")
+        column = layout.column()
+        column.row().prop(scn,"selOnly")
         sub = column.row()
         sub.active = check_for_mods(scn) 
         sub.enabled = check_for_mods(scn) 
-        sub.label(text="Apply Modifiers")
+        sub.prop(scn,"appMod")
         if scn.appMod:
-            column.row().label(text="Create Backup")
+            column.row().prop(scn,"cloneOb")
             column.row().label(text="Subsurf will be applied, backup?", icon='INFO')
-        # column.row().label(text="Skip localview check")
-        column.row().label(text="Custom path")
+
+        column.row().prop(scn,"uvlb_pathEnable")
         if scn.uvlb_pathEnable:
+            layout = self.layout
+            layout.enabled = True
+            column = layout.column()
             row = column.row()
             row.alert = not os.path.exists(scn.uvlb_customPath)
-            row.prop(scn,"uvlb_customPath", text="")
-
-        # Column Right
-        column = objBox.column()
-        column.row().prop(scn,"selOnly", text="")
-        sub = column.row()
-        sub.active = check_for_mods(scn) 
-        sub.enabled = check_for_mods(scn) 
-        sub.prop(scn,"appMod", text="")
-        if scn.appMod:
-            column.row().prop(scn,"cloneOb", text="")
-            column.row().label(text="")
-        # column.row().prop(scn,"checkLocal", text="")
-        column.row().prop(scn,"uvlb_pathEnable", text="")
-        # if scn.uvlb_pathEnable:
-        #     column.row().label(text = "")
-        #     column.row().label(text = "")
+            row.prop(scn,"uvlb_customPath")
 
 
 def uvl_panel_operator(self,context):
-        if app_path_set(context):
-            layout = self.layout
-            #-- START EXPORT --
-            layout.scale_y = 1.25
-            # row = layout.row(align=True)
-            # col = row.column(align=True)
-            col = layout.column(align=True)
-            row = col.row(align=True)
-            row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
-            row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
-            
-            scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-            # Make this cleaner > this section is used 3x > make single functon
-            # preferences = bpy.context.preferences
-            # addon_prefs = preferences.addons[__name__].preferences
-            # scn = bpy.context.scene
-
-            # #---Variables---
-            # if platform == "win32":
-            #     UVLayoutPath = addon_prefs.uvlb_winPath
-
-            # if scn.uvlb_pathEnable:
-            #     path = scn.uvlb_customPath
-            # else:
-            #     path = "" + tempfile.gettempdir()
-
-            # path = '/'.join(path.split('\\'))
-
-            # file_outName = path + "Blender2UVLayout_TMP.out"
-            
-            # print(os.path.isfile(file_outName))
-            # print(os.path.exists(file_outName))
-            # print(file_outName)
-            ###################
-            if os.path.exists(file_outName):
-            # if os.path.isfile(file_outName):
-                row = col.row(align=True)
-                row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
-
-
-#-- BRIDGE WM DIALOG POPUP MENU __#
-class UVLAYOUT_OT_bridge(Operator):
-    bl_idname = "uvlayout.bridge"
-    bl_name = "UVlayout DIALOG MENU"
-    bl_label = "Headus UVlayout Bridge"
-
-    tab: EnumProperty(name = "Tab", default = "EXECUTE",  items = helper_tabs_items)
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def check(self, context):
-        return True
-
-    @classmethod
-    def poll(cls, context):
-        # Only allow in Object mode and for a selected mesh.
-        return (bpy.context.object is not None and bpy.context.object.type == "MESH") and not app_path_set(context)
-
-    def draw(self, context):
+    if app_path_set(context):
         layout = self.layout
-        scn = bpy.context.scene
-        obj = bpy.context.object
-        
-
-        #Replaces header panel
-        layout.label(text=self.bl_label)
-
-        #-- UVLAYOUT LOAD OPTIONS --
-        settingsBox = layout.box()
-        uvlbHeader = settingsBox.split(factor=0.92)
-        column = uvlbHeader.column()
-        column.row().label(text="Load Options:")
-
-        column = uvlbHeader.column()
-        column.row().prop(scn, "uvlb_help", text="", icon_value=custom_icons["help"].icon_id, emboss=False)
-
-        uvlbOptions = settingsBox.split(factor=0.5)
-        
-        # Column Right
-        column = uvlbOptions.column()
-        column.row().label(text="Mode:")
-        column.row().label(text="Uv Mode:")
-
-        # Column Right
-        column = uvlbOptions.column()
-        column.row().prop(scn, "uvlb_mode", text="",icon = getattr(scn,"iconMode",2))
-        column.row().prop(scn, "uvlb_uv_mode", text="",icon = getattr(scn,"iconUVMode",2))
-
-        uvlbOptions = settingsBox.split(factor=0.92)
-        
-        # Column Left
-        column = uvlbOptions.column()
-        column.row().label(text="Weld UVs")
-        column.row().label(text="Detach Flipped UV's")
-        if (getattr(scn, "uvlb_uv_mode",) == '0'):
-            column.row().label(text="Clean")
-
-        # Column Right
-        column = uvlbOptions.column()
-        column.row().prop(scn, "uvlb_uv_weld", text="")
-        column.row().prop(scn, "uvlb_uv_detach", text="")
-        if (getattr(scn, "uvlb_uv_mode",) == '0'):
-            column.row().prop(scn, "uvlb_uv_clean", text="")
-            # uvlbOptions.prop(scn, "uvlb_uv_geom") #Destroys linking import- triangulates the mesh
-
-        #-- QUICK COMMANDS --#
-        settingsBox = layout.box()
-        uvlbAutoCom = settingsBox.split(factor=0.92)
-
-        # Column Left
-        column = uvlbAutoCom.column()
-        column.row().label(text="Automation:")
-        if scn.uvlb_autoComm:
-            column.row().label(text="Auto-Pack")
-            if scn.uvlb_autoPack:
-                column.row().label(text="Save & Return")
-            column.row().label(text="Optimize")
-
-        # Column Right
-        column = uvlbAutoCom.column()
-        column.row().prop(scn, "uvlb_autoComm", text="")
-        if scn.uvlb_autoComm:
-            column.row().prop(scn, "uvlb_autoPack", text="")
-            if scn.uvlb_autoPack:
-                column.row().prop(scn, "uvlb_autoSave", text="")
-            column.row().prop(scn, "uvlb_autoOptimize", text="")
-
-        #-- UVMAPS --
-        if check_uv_channels(scn):
-            uvMapBox = layout.box()
-            uvMapChannel = uvMapBox.row()
-            uvMapChannel = uvMapChannel.split(factor=0.5)
-            uvMapChannel.label(text="UV Channel:", icon="GROUP_UVS")
-            uvMapChannel.prop(scn, "uvlb_uv_channel", text="")
-
-        #-- OBJ EXPORT options --
-        objBox = layout.box()
-        objBox = objBox.split(factor=0.92)
-
-        # Column Left
-        column = objBox.column()
-        column.row().label(text="OBJ Export Settings:")
-        column.row().label(text="Selection Only")
-        sub = column.row()
-        sub.active = check_for_mods(scn) 
-        sub.enabled = check_for_mods(scn) 
-        sub.label(text="Apply Modifiers")
-        if scn.appMod:
-            column.row().label(text="Create Backup")
-            column.row().label(text="Subsurf will be applied, backup?", icon='ERROR')
-        # column.row().label(text="Skip localview check")
-        column.row().label(text="Custom path")
-        if scn.uvlb_pathEnable:
-            # scn.uvlb_customPath = "C:/Users/romboutversluijs/Desktop/_Blender/Export/headus_uvlayoutsssss"
-            row = column.row()
-            row.alert = not os.path.exists(scn.uvlb_customPath)
-            row.prop(scn,"uvlb_customPath", text="")
-            # column.row().label(text = "Saved per scene", icon='INFO')
-
-        # Column Right
-        column = objBox.column()
-        column.row().label(text="")
-        column.row().prop(scn,"selOnly", text="")
-        sub = column.row()
-        sub.active = check_for_mods(scn) 
-        sub.enabled = check_for_mods(scn) 
-        sub.prop(scn,"appMod", text="")
-        if scn.appMod:
-            column.row().prop(scn,"cloneOb", text="")
-            column.row().label(text="")
-        # column.row().prop(scn,"checkLocal", text="")
-        column.row().prop(scn,"uvlb_pathEnable", text="")
-        # if scn.uvlb_pathEnable:
-        #     column.row().label(text = "")
-        #     column.row().label(text = "")
-
-        #---Send button---
+        #-- START EXPORT --
         layout.scale_y = 1.25
-        # row = layout.row(align=True)
-        # col = row.column(align=True)
+        
         col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
         row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
         
         scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-        # Make this cleaner > this section is used 3x > make single functon
-        # preferences = bpy.context.preferences
-        # addon_prefs = preferences.addons[__name__].preferences
-        # scn = bpy.context.scene
-
-        # #---Variables---
-        # if platform == "win32":
-        #     UVLayoutPath = addon_prefs.uvlb_winPath
-
-        # if scn.uvlb_pathEnable:
-        #     path = scn.uvlb_customPath
-        # else:
-        #     path = "" + tempfile.gettempdir()
-
-        # path = '/'.join(path.split('\\'))
-
-        # file_outName = path + "Blender2UVLayout_TMP.out"
-        ###################
-
-        if os.path.isfile(file_outName):
+        
+        if os.path.exists(file_outName):
+        # if os.path.isfile(file_outName):
             row = col.row(align=True)
             row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
-
-        # layout.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
-        # layout.separator()
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_popup(self, width=200)
-
-#
-#    def modal(self, context, event):
-#        return context.window_manager.invoke_props_dialog(self, width=225)
-
-
 
 #-- ADDON PREFS --#
 class Blender2UVLayoutAddonPreferences(AddonPreferences):
@@ -1692,7 +1419,6 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         col.separator()
         #-- CUSTOM EXPORT PATH --
         expBut = layout.box()
-        # expBut = expBut.split(factor=0.95)
 
         column = expBut.column()
         column.row().label(text = "Custom export path:")
@@ -1700,21 +1426,13 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
             row = column.row()
             row.alert = not os.path.exists(scene.uvlb_customPath)
             row.prop(scene,"uvlb_customPath", text="")
-            
-            # column.row().prop(scene, "uvlb_customPath", text="")
-            # column.row().label(text = "Path will be saved per scene")
-            # column.separator()
 
         column = expBut.column()
         column.row().prop(scene,"uvlb_pathEnable", text="")
-        # if scene.uvlb_pathEnable:
-        # 	column.row().operator("open.path_loc", text="", icon='FILEBROWSER')
-        # 	column.separator()
 
         box=layout.box()
         split = box.split()
         col = split.column()
-#        col.separator()
         col.label(text = "Hotkeys:")
         col.label(text = "Do NOT remove hotkeys, disable them instead!")
 
@@ -1756,7 +1474,7 @@ class OBJECT_OT_b2uvl_addon_prefs(Operator):
     def execute(self, context):
         if platform == "win32":
             preferences = context.preferences
-            addon_prefs = preferences.addons[__name__].preferences
+            addon_prefs = get_addon_prefs(context)
 
             info = ("Path: %s" % (addon_prefs, "uvlb_winPath"))
 
@@ -1796,7 +1514,6 @@ classes = (
     VIEW3D_PT_automation,
     VIEW3D_PT_uvchannel,
     VIEW3D_PT_export_options,
-    UVLAYOUT_OT_bridge,
     Blender2UVLayoutAddonPreferences,
     OBJECT_OT_b2uvl_addon_prefs,
     )
@@ -1813,10 +1530,10 @@ def register():
 
     km = kc.keymaps.new(name = "3D View", space_type = "VIEW_3D")
 
-    kmi = km.keymap_items.new("uvlayout.bridge", "V", "PRESS", alt = True, shift = True)
-    kmi.properties.tab = "EXECUTE"
-    addon_keymaps.append((km, kmi))
-
+    # Removed dialog operator, this is cleaner and eaier. No duplciate code
+    kmi = km.keymap_items.new('wm.call_panel', 'V', 'PRESS',alt = True,shift=True)
+    kmi.properties.name = 'VIEW3D_PT_panel_uvlbridge'
+    
     kmi = km.keymap_items.new("uvlb.export", "V", "PRESS", shift = True)
     kmi.properties.tab = "EXECUTE"
 
