@@ -118,16 +118,20 @@
 - Export error if app path is not set, Panel shows red error with set app path option
 
 ## [v0.7.4] - 2024-07-25
-
 # Fixed
 - Automation Optimize, didnt do anything code fixed
 - Show warning when exporting and custom path doesnt exist or is wrong
+- missing check for OSX app path
 
 # Changed
 - Code cleanup
 - Panel design is using split_property ala 2.8 Design
 - Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
 - Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
+
+## [v0.7.41] - 2024-07-2
+# Fixed
+- missing check for OSX app path set
 
 ####################
 ## TODO
@@ -149,7 +153,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 4),
+    "version": (0, 7, 41),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -1206,6 +1210,11 @@ class VIEW3D_PT_panel_uvlbridge(UVLBRIDGE, Panel):
 
         if platform == "win32" and (addon_prefs.uvlb_winPath == 'Please set Application Path'):
             layout.alert = addon_prefs.uvlb_winPath == 'Please set Application Path'
+            layout.label(text = "Application Path Headus UVLayout v2.")
+            layout.prop(addon_prefs, "uvlb_winPath", text="")
+        
+        if platform == "darwin" and (addon_prefs.versionUVL == 'Please choose version'):
+            layout.alert = addon_prefs.versionUVL == 'Please choose version'
             layout.label(text = "Application Path Headus UVLayout v2.")
             layout.prop(addon_prefs, "uvlb_winPath", text="")
 
