@@ -2,7 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 
-## [v0.7.41] - 2024-07-2
+## [v0.7.5] - 2024-07-27
+# Added
+- UVchannel map preview toggle, when switching uv channel. the preview actively changes and also set index of active UVmap 
+
+## [v0.7.41] - 2024-07-25
 # Fixed
 - missing check for OSX app path set
 
@@ -159,6 +163,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[v0.7.5]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.5
 [v0.7.41]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.41
 [v0.7.4]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.4
 [v0.7.3]:https://github.com/schroef/uvlayout_bridge/releases/tag/v0.7.3

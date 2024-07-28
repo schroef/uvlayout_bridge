@@ -129,9 +129,13 @@
 - Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
 - Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
 
-## [v0.7.41] - 2024-07-2
+## [v0.7.41] - 2024-07-25
 # Fixed
 - missing check for OSX app path set
+
+## [v0.7.5] - 2024-07-25
+# Added
+- uv channel poreview when switch number. this switches uvmap index so we actually can see preview easier
 
 ####################
 ## TODO
@@ -144,7 +148,7 @@
 - Save custom file in dot file next to blend file, now ini file is still per app
 - Add better check when UVlayout is canceled, currently it states that all is done
 - Autopack sometimes closes without saving on OSX
-
+- When switching UV Channel, make it switch in the panel so we see preview
 ####################
 '''
 
@@ -153,7 +157,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 41),
+    "version": (0, 7, 5),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -210,10 +214,80 @@ def customPath_exists(context):
     scn = context.scene
     return os.path.exists(scn.uvlb_customPath)
 
+# def object_color_type_items(self,context)
+
+#     return colors
+
+def toggle_texture_preview(self,context):
+    context = bpy.context
+    scn = context.scene
+    VIEW3D_PT_shading = bpy.types.VIEW3D_PT_shading
+    shading = VIEW3D_PT_shading.get_shading(context)
+    if scn.uvlb_uvPreview ==  True:
+        if shading.color_type != 'TEXTURE':
+            scn.object_color_types = shading.color_type
+            shading.color_type = 'TEXTURE'
+    else:
+        shading.color_type = scn.object_color_types
+    #toggle actrive UVMAP index
+    ob = context.active_object
+    scn=context.scene
+    ob.data.uv_layers.active_index = scn.uvlb_uv_channel-1
+
+def update_uvchannel_index(self,context):
+    '''channels uv channel index so we see preview in 3dv when switching'''
+    # switch uv map index
+    ob = context.active_object
+    scn=context.scene
+    ob.data.uv_layers.active_index = scn.uvlb_uv_channel-1
+
+    # set overlay preview
+    context.scene.uvlb_uvPreview = True
+    toggle_texture_preview(context, context)
+
+# WIP make it toggle both ways, so if we change index in UVMAPS panel also update int prop
+# b3d example GGET/SET
+# https://b3d.interplanety.org/en/dynamically-setting-the-max-and-min-values-%E2%80%8B%E2%80%8Bfor-a-custorm-property-in-the-blender-python-api/
+def get_uvchannels(self):
+    uv_channels = bpy.context.active_object.data.uv_layers
+    # # print(self.get('uvlb_uv_channel'))
+    # if self.get('uvlb_uv_channel',1) > len(uv_channels)-1:
+    #     print("1")
+    #     return self.get('uvlb_uv_channel')
+    # elif uv_channels.active_index+1 < self.get('uvlb_uv_channel'):
+    #     print("2")
+    #     return uv_channels.active_index +1
+    # elif self.get('uvlb_uv_channel',1) < uv_channels.active_index+1:
+    #     print("3")
+    #     return self.get('uvlb_uv_channel')
+    # else:
+    #     return 1
+    return self.get('uvlb_uv_channel', 1)
+
+def set_uvchannels(self, value):
+    uv_channels = bpy.context.active_object.data.uv_layers
+    if uv_channels:
+        if value > len(uv_channels):
+            value = len(uv_channels)
+        if value < len(uv_channels):
+            value = 1
+    else:
+        value = 1
+    self['uvlb_uv_channel'] = value
+
+
+# def get_uvchannels_index(self,context):
+#     '''Get uv channels active_index'''
+#     if context.scene and context.active_object:
+#         ob = context.active_object
+#         if ob.data.uv_layers != None:
+#             return ob.data.uv_layers.active_index + 1
+
+
+#-- LOAD / SET CONFIG FILE  --#
 configFol = "config"
 version = "Please choose version"
 
-#-- LOAD / SET CONFIG FILE  --#
 def setConfig(self, context):
     '''Save Custom Path in config file when property is updated
         :param context: context
@@ -318,14 +392,37 @@ scn.uvlb_pathEnable = BoolProperty(
     update = setConfig)
 
 
+
 #-- BRIDGE ADDON OPTIONS --#
 #---UV Channel selector---
 scn.uvlb_uv_channel = IntProperty(
     name = "Map",
-    description = "Select a UV channel for editing in export.",
+    description = "Select a UV channel for editing in export. Shows UV channel when setting number for easy preview",
     default = 1,
-    min = 1,
-    max = 8)
+    get=get_uvchannels, 
+    set=set_uvchannels,
+    # get=lambda self: get_uvchannels(self),
+    # set=lambda self, value: set_uvchannels(self, value),
+    # min = 1,
+    # max = get_uvchannels,
+    update = update_uvchannel_index)
+
+scn.object_color_types = EnumProperty(
+    items = (('MATERIAL', 'MATERIAL',''),
+           ('OBJECT','OBJECT',''),
+           ('VERTEX','VERTEX',''),
+           ('SINGLE','SINGLE',''),
+           ('RANDOM','RANDOM',''),
+           ('TEXTURE','TEXTURE','')),
+    name = "Color Type",
+    description = "Overlayer object Color Type in 3dView",
+    default = 'MATERIAL')
+
+scn.uvlb_uvPreview = BoolProperty(
+    name="UV Preview",
+    description = "Preview UV channel in 3dView, enables texture preview.",
+    default = False,
+    update = toggle_texture_preview)
 
 scn.spaceName = BoolProperty(
     name="Spaces in Name",
@@ -356,6 +453,12 @@ scn.useKeyMap = BoolProperty(
     default=True)
 
 #--Icons Enummenus --#
+scn.iconMode = EnumProperty(
+    items = (('EDITMODE_HLT', "EDITMODE_HLT", ''),
+           ('MOD_SUBSURF', "MOD_SUBSURF", '')),
+    name = "Mode",
+    description = "POLY or SUBD",
+    default = 'EDITMODE_HLT')
 scn.iconMode = EnumProperty(
     items = (('EDITMODE_HLT', "EDITMODE_HLT", ''),
            ('MOD_SUBSURF', "MOD_SUBSURF", '')),
@@ -1304,9 +1407,16 @@ class VIEW3D_PT_uvchannel(UVLBRIDGE, Panel):
         layout.use_property_decorate = False  # No animation.
         obj = bpy.context.object
 
-        uvMapBox = layout
-        uvMapChannel = uvMapBox.row()
+        # uvMapBox = layout
+        # uvMapChannel = uvMapBox.split(factor=0.3)
+        col = layout.column(align=True)
+        uvMapChannel = col.row(align=True)
+        if scn.uvlb_uvPreview:
+            icon_uv = 'HIDE_OFF'
+        else:
+            icon_uv = 'HIDE_ON'
         uvMapChannel.prop(scn, "uvlb_uv_channel", icon="GROUP_UVS")
+        uvMapChannel.prop(scn, "uvlb_uvPreview", text='', icon=icon_uv)
 
 def check_for_mods(scn):
     #--Get selected objects---
