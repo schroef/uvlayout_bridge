@@ -10,6 +10,9 @@
 #	- updated user_preferences to preferences
 #   - Add warning when appPath is not set
 #   - Auto save shows CANCELLED but does work
+2025-04-09
+    - Add Force clear folder > sometimes during crash TMP files dont get removes
+    Results in Buttons not showwing
 ####################
 
 ####################
@@ -20,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ## [v0.7.6] - 2025-04-09
 # Fixed
 - Keymap popup dialog bridge nots hwoing in preferences
+- issue config file not reading and writing correct settings
 
 # Added
 - manual import so BLender doesnt freeze while its waiting from output file from UVlayout
@@ -311,7 +315,7 @@ def setConfig(self, context):
     customPath = getattr(context.scene, "uvlb_customPath", "")
     pathEnable = getattr(context.scene, "uvlb_pathEnable", False)
     winPath = getattr(addon_prefs, "uvlb_winPath", "")
-    importMethod = getattr(addon_prefs, "uvlb_importMethod", "0")
+    importMethod = getattr(context.scene, "uvlb_importMethod")
     config = configparser.ConfigParser()
     configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), configFol + "/config.ini")
     # print("UVlayout-Bridge: %s // %s // %s" % (customPath, pathEnable, winPath))
@@ -1103,8 +1107,8 @@ def UVL_IO():
     result = False
     #---IMPORT---
     while not os.path.isfile(file_outName) and uvlayout_proc.poll() != 0:
-
-        if (scn.uvlb_importMethod=='1'):
+        print("scn.uvlb_importMethod %s" % scn.uvlb_importMethod)
+        if (scn.uvlb_importMethod== "0"):
             print("Auto Import mode")
             result = sendToUVlayout(scn, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
         else:
@@ -1559,18 +1563,23 @@ def uvl_panel_operator(self,context):
         
         col = layout.column(align=True)
         row = col.row(align=True)
-        print(not os.path.exists(file_outName))
+        # print(not os.path.exists(file_outName))
+        print("not uvlb_data.uvlb_manualImport %s" % (not uvlb_data.uvlb_manualImport))
         if not os.path.exists(file_outName) and not uvlb_data.uvlb_manualImport:
             row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
             row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
         
-        
-        if os.path.exists(file_outName) and not (scn.uvlb_importMethod):
+        # print("scn.uvlb_importMethod %s" % scn.uvlb_importMethod)
+        # print("not (scn.uvlb_importMethod) %s" % (scn.uvlb_importMethod != 0))
+        if os.path.exists(file_outName) and not (scn.uvlb_importMethod != "0"):
         # if os.path.isfile(file_outName):
             row = col.row(align=True)
             row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
 
-        if scn.uvlb_importMethod=='0' and uvlb_data.uvlb_manualImport: #os.path.exists(file_outName):
+        print(scn.uvlb_importMethod == "1" and uvlb_data.uvlb_manualImport)
+        print("scn.uvlb_importMethod == 1 %s - scn.uvlb_importMethod %s - typeof %s" % (scn.uvlb_importMethod == 1, scn.uvlb_importMethod, type(scn.uvlb_importMethod)))
+        print(uvlb_data.uvlb_manualImport)
+        if scn.uvlb_importMethod == "1" and uvlb_data.uvlb_manualImport: #os.path.exists(file_outName):
             row.operator("uvlb.forced_reimport", text = "Import UVlayut", icon_value=custom_icons["uvl"].icon_id)
         
 

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [v0.7.6] - 2025-04-09
 # Fixed
 - Keymap popup dialog bridge nots hwoing in preferences
+- issue config file not reading and writing correct settings
 
 # Added
 - manual import so BLender doesnt freeze while its waiting from output file from UVlayout
