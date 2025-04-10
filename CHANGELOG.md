@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [v0.7.7] - 2025-04-10
+# Fixed
+- issue preview uv_channel error when no object is active
+
+# Changed
+- Show preview uv_channel always, even when only 1 uv map is available
+
 ## [v0.7.6] - 2025-04-09
 # Fixed
 - Keymap popup dialog bridge nots hwoing in preferences

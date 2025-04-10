@@ -20,6 +20,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.7.7] - 2025-04-10
+# Fixed
+- issue preview uv_channel error when no object is active
+
+# Changed
+- Show preview uv_channel always, even when only 1 uv map is available
+
 ## [v0.7.6] - 2025-04-09
 # Fixed
 - Keymap popup dialog bridge nots hwoing in preferences
@@ -173,7 +180,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 6),
+    "version": (0, 7, 7),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -265,20 +272,22 @@ def update_uvchannel_index(self,context):
 # b3d example GGET/SET
 # https://b3d.interplanety.org/en/dynamically-setting-the-max-and-min-values-%E2%80%8B%E2%80%8Bfor-a-custorm-property-in-the-blender-python-api/
 def get_uvchannels(self):
-    uv_channels = bpy.context.active_object.data.uv_layers
-    # # print(self.get('uvlb_uv_channel'))
-    # if self.get('uvlb_uv_channel',1) > len(uv_channels)-1:
-    #     print("1")
-    #     return self.get('uvlb_uv_channel')
-    # elif uv_channels.active_index+1 < self.get('uvlb_uv_channel'):
-    #     print("2")
-    #     return uv_channels.active_index +1
-    # elif self.get('uvlb_uv_channel',1) < uv_channels.active_index+1:
-    #     print("3")
-    #     return self.get('uvlb_uv_channel')
-    # else:
-    #     return 1
-    return self.get('uvlb_uv_channel', 1)
+    if bpy.context.active_object is not None:
+        uv_channels = bpy.context.active_object.data.uv_layers
+        # # print(self.get('uvlb_uv_channel'))
+        # if self.get('uvlb_uv_channel',1) > len(uv_channels)-1:
+        #     print("1")
+        #     return self.get('uvlb_uv_channel')
+        # elif uv_channels.active_index+1 < self.get('uvlb_uv_channel'):
+        #     print("2")
+        #     return uv_channels.active_index +1
+        # elif self.get('uvlb_uv_channel',1) < uv_channels.active_index+1:
+        #     print("3")
+        #     return self.get('uvlb_uv_channel')
+        # else:
+        #     return 1
+        return self.get('uvlb_uv_channel', 1)
+    return 0
 
 def set_uvchannels(self, value):
     uv_channels = bpy.context.active_object.data.uv_layers
@@ -420,6 +429,7 @@ scn.uvlb_uv_channel = IntProperty(
     name = "Map",
     description = "Select a UV channel for editing in export. Shows UV channel when setting number for easy preview",
     default = 1,
+    min = 0,
     get=get_uvchannels, 
     set=set_uvchannels,
     # get=lambda self: get_uvchannels(self),
@@ -1509,7 +1519,7 @@ def check_uv_channels(scn):
     #--Get selected objects---
     for ob in bpy.context.selected_objects:
         if ob.type == 'MESH':
-            if len(ob.data.uv_layers) > 1:
+            if len(ob.data.uv_layers) > 0:
                 return True
     return False
 
