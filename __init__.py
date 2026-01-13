@@ -1597,6 +1597,7 @@ def uvl_panel_operator(self,context):
         # if os.path.isfile(file_outName):
             row = col.row(align=True)
             row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
+            row.operator("uvlb.refresh_manual_import", text = "Refresh Manual Import", icon='FILE_REFRESH')
 
         # print(scn.uvlb_importMethod == "1" and uvlb_data.uvlb_manualImport)
         # print("scn.uvlb_importMethod == 1 %s - scn.uvlb_importMethod %s - typeof %s" % (scn.uvlb_importMethod == 1, scn.uvlb_importMethod, type(scn.uvlb_importMethod)))
@@ -1769,9 +1770,11 @@ class UVLB_OT_refreshManualImport(Operator):
         return scn.uvlb_data.uvlb_manualImport
 
     def execute(self, context):
+        file_outName = get_path_files()[4]
         scn = context.scene
         if scn.uvlb_data.uvlb_manualImport:
             scn.uvlb_data.uvlb_manualImport = False
+            os.remove(file_outName)
 
         self.report({'INFO'}, "Refresh Manual Import Done!")
 
