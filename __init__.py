@@ -20,6 +20,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.7.9] - 2026-01-13
+# Fixed
+- When manual import is active and old 'TMP.out' file is found, this cause the GUI to hide all buttons
+
 ## [v0.7.8] - 2026-01-13
 # Fixed
 - import / export not working bl 5.0 > was limited to == 4 see import and export
@@ -187,7 +191,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 8),
+    "version": (0, 7, 9),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -1602,6 +1606,9 @@ def uvl_panel_operator(self,context):
             row.operator("uvlb.forced_reimport", text = "Import UVlayut", icon_value=custom_icons["uvl"].icon_id)
             row.operator("uvlb.refresh_manual_import", text = "", icon='FILE_REFRESH')
         
+        # Forced Reset when old TMP.out file is there and manual import is active > causes buttons to hide
+        if not os.path.exists(file_outName) and uvlb_data.uvlb_manualImport:
+            row.operator("uvlb.refresh_manual_import", text = "Refresh Manual Import", icon='FILE_REFRESH')
 
 #-- ADDON PREFS --#
 class Blender2UVLayoutAddonPreferences(AddonPreferences):

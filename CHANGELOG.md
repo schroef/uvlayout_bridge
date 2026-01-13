@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.7.9] - 2026-01-13
+# Fixed
+- When manual import is active and old 'TMP.out' file is found, this cause the GUI to hide all buttons
+
 ## [v0.7.8] - 2026-01-13
 # Fixed
 - import / export not working bl 5.0 > was limited to == 4 see import and export
