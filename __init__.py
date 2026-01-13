@@ -10,9 +10,144 @@
 #	- updated user_preferences to preferences
 #   - Add warning when appPath is not set
 #   - Auto save shows CANCELLED but does work
+2025-04-09
+    - Add Force clear folder > sometimes during crash TMP files dont get removes
+    Results in Buttons not showwing
 ####################
 
 ####################
+
+# Changelog
+All notable changes to this project will be documented in this file.
+
+## [v0.7.8] - 2026-01-13
+# Fixed
+- import / export not working bl 5.0 > was limited to == 4 see import and export
+
+## [v0.7.7] - 2025-04-10
+# Fixed
+- issue preview uv_channel error when no object is active
+
+# Changed
+- Show preview uv_channel always, even when only 1 uv map is available
+
+# Added
+- Refresh manual import > sometimes when error happens panel keeps showing grayed out imort button. This refreshes the state
+
+## [v0.7.6] - 2025-04-09
+# Fixed
+- Keymap popup dialog bridge nots hwoing in preferences
+- issue config file not reading and writing correct settings
+
+# Added
+- manual import so BLender doesnt freeze while its waiting from output file from UVlayout
+
+# Changed
+- Preferences panel cleanup
+
+## [v0.7.5] - 2024-07-25
+# Added
+- uv channel preview when switch number. this switches uvmap index so we actually can see preview easier
+
+## [v0.7.41] - 2024-07-25
+# Fixed
+- missing check for OSX app path set
+
+## [v0.7.4] - 2024-07-25
+# Fixed
+- Automation Optimize, didnt do anything code fixed
+- Show warning when exporting and custom path doesnt exist or is wrong
+- missing check for OSX app path
+
+# Changed
+- Code cleanup
+- Panel design is using split_property ala 2.8 Design
+- Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
+- Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
+
+## [v0.7.3] - 2024-07-24
+# Fixed
+- Export error if app path is not set, Panel shows red error with set app path option
+
+## v.0.7.2 - 2024-07-23
+# Fixed
+- Changed parameter for OBJ importer and exporter.
+
+## v.0.7.1 - 2021-11-10
+# Changed
+- get path and files moved to its own function, same code was used 6 times
+
+## v.0.7.0
+## 2021-11-10
+# Added
+- Export custom path now in export options panel > easier accesible
+
+# Changed
+- Better check if we cancel or send file back to Blender > returns cancel or done report in bottom
+
+## v.0.7.0
+## 2021-11-06
+# Added
+- Forced reimport > when commands fails
+- Optimize options > auto drops geometry, flattens, optimizes, packs, saves and returns to Blender
+- Function to send tmp, edit & obj files to UVlayout. This allows user to easily open them, the ui from UVlayout is very outdated and tedious to work with.
+
+# Changed
+- If not mods are in mesh gray out menu option
+- If 1 UV channel in mesh hide UV layout sub panel
+- Moved panel to Tool catergory > save vertical menu from being to crowed
+
+## v.0.6.9
+## 2021-11-06
+# Fixed
+- Autosave & close kept running when automation was off
+
+## v.0.6.8
+## 2021-11-04
+# Fixed
+- Concate error in export operator > addon_prefs, "uvlb_winPath" caused error 
+- OBJ importer > global_clight_size taken out in new OBJ importer
+- bl293 'apply_as" has changed
+- Check local bool was not working properly. Added warning text, it has issues now and doen not transfering work done in UVlayout
+- Missing options for Windows multiple options were not working and added in export
+
+# Changed
+- Added split_property > new 280 layout method
+- Panel uses now sub-panel introduced in 2.80
+
+## v.0.6.7
+## 20-03-20
+## Changed
+## - custom properties saved to addon prefs instead of in scene
+##   Mentioned by Brechts https://developer.blender.org/T74954#895043
+##   https://docs.blender.org/api/current/bpy.types.AddonPreferences.html
+##   Im Skipping this because i want this to be per scene
+## - Changed string path to DIR_PATH
+
+## v.0.6.6
+## 20-03-19
+## Fixed
+## - Warning error Panel class
+
+## v.0.6.5
+## 26-02-19
+## Fixed
+## - Error caused by items inside collection
+## - Non Mesh types where added when "selection only" was off
+
+## v.0.6.4
+## 12-01-19
+## Changed
+## - Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
+## - Label was replace due to new WM menu
+## - Export button has more logical label
+##
+## Fixed
+## - Apply modifier for bl 2.80
+##
+## Added
+## - Undo for export operation in case of error or malfunction
+
 ## v.0.6.3
 ## 29-12-18
 ## Changed
@@ -31,112 +166,6 @@
 ## - Label was replace due to new WM menu
 ## - Export button has more logical label
 
-## v.0.6.4
-## 12-01-19
-## Changed
-## - Popup menu doesnt have 2 buttons at the bottom, makes it more clear what export is
-## - Label was replace due to new WM menu
-## - Export button has more logical label
-##
-## Fixed
-## - Apply modifier for bl 2.80
-##
-## Added
-## - Undo for export operation in case of error or malfunction
-
-## v.0.6.5
-## 26-02-19
-## Fixed
-## - Error caused by items inside collection
-## - Non Mesh types where added when "selection only" was off
-
-## v.0.6.6
-## 20-03-19
-## Fixed
-## - Warning error Panel class
-
-## v.0.6.7
-## 20-03-20
-## Changed
-## - custom properties saved to addon prefs instead of in scene
-##   Mentioned by Brechts https://developer.blender.org/T74954#895043
-##   https://docs.blender.org/api/current/bpy.types.AddonPreferences.html
-##   Im Skipping this because i want this to be per scene
-## - Changed string path to DIR_PATH
-
-## v.0.6.8
-## 2021-11-04
-# Fixed
-- Concate error in export operator > addon_prefs, "uvlb_winPath" caused error 
-- OBJ importer > global_clight_size taken out in new OBJ importer
-- bl293 'apply_as" has changed
-- Check local bool was not working properly. Added warning text, it has issues now and doen not transfering work done in UVlayout
-- Missing options for Windows multiple options were not working and added in export
-
-# Changed
-- Added split_property > new 280 layout method
-- Panel uses now sub-panel introduced in 2.80
-
-## v.0.6.9
-## 2021-11-06
-# Fixed
-- Autosave & close kept running when automation was off
-
-## v.0.7.0
-## 2021-11-06
-# Added
-- Forced reimport > when commands fails
-- Optimize options > auto drops geometry, flattens, optimizes, packs, saves and returns to Blender
-- Function to send tmp, edit & obj files to UVlayout. This allows user to easily open them, the ui from UVlayout is very outdated and tedious to work with.
-
-# Changed
-- If not mods are in mesh gray out menu option
-- If 1 UV channel in mesh hide UV layout sub panel
-- Moved panel to Tool catergory > save vertical menu from being to crowed
-
-## v.0.7.0
-## 2021-11-10
-# Added
-- Export custom path now in export options panel > easier accesible
-
-# Changed
-- Better check if we cancel or send file back to Blender > returns cancel or done report in bottom
-
-## v.0.7.1 - 2021-11-10
-
-# Changed
-- get path and files moved to its own function, same code was used 6 times
-
-## v.0.7.2 - 2024-07-23
-
-# Fixed
-- Changed parameter for OBJ importer and exporter.
-
-## [v0.7.3] - 2024-07-24
-
-# Fixed
-- Export error if app path is not set, Panel shows red error with set app path option
-
-## [v0.7.4] - 2024-07-25
-# Fixed
-- Automation Optimize, didnt do anything code fixed
-- Show warning when exporting and custom path doesnt exist or is wrong
-- missing check for OSX app path
-
-# Changed
-- Code cleanup
-- Panel design is using split_property ala 2.8 Design
-- Dialog operator now uses duplicate of panel by using wm.call_panel > easier and no double code
-- Automation is either pack or optimize, running both commands wasnt doing anything since optimize also packs uvs
-
-## [v0.7.41] - 2024-07-25
-# Fixed
-- missing check for OSX app path set
-
-## [v0.7.5] - 2024-07-25
-# Added
-- uv channel poreview when switch number. this switches uvmap index so we actually can see preview easier
-
 ####################
 ## TODO
 - Seams need to be updated after new import > 0.6.8 still shows old seams
@@ -148,7 +177,8 @@
 - Save custom file in dot file next to blend file, now ini file is still per app
 - Add better check when UVlayout is canceled, currently it states that all is done
 - Autopack sometimes closes without saving on OSX
-- When switching UV Channel, make it switch in the panel so we see preview
+V When switching UV Channel, make it switch in the panel so we see preview
+- When selected object have different uv channels. store them
 ####################
 '''
 
@@ -157,7 +187,7 @@ bl_info = {
     "description": "Headus UVLayout Bridge - A bridge between Blender and Headus UVlayout for quick UVs unwrapping",
     "location": "3D VIEW > Properties > Headus UVlayout Panel",
     "author": "Rombout Versluijs // Titus Lavrov",
-    "version": (0, 7, 5),
+    "version": (0, 7, 8),
     "blender": (2, 80, 0),
     "wiki_url": "https://github.com/schroef/uvlayout_bridge",
     "tracker_url": "https://github.com/schroef/uvlayout_bridge/issues",
@@ -178,8 +208,8 @@ import configparser
 
 from sys import platform
 from configparser import SafeConfigParser
-from bpy.props import StringProperty, EnumProperty, BoolProperty, IntProperty
-from bpy.types import Operator, AddonPreferences, Panel
+from bpy.props import StringProperty, EnumProperty, BoolProperty, IntProperty, PointerProperty
+from bpy.types import Operator, AddonPreferences, Panel, PropertyGroup
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 from . config.registers import get_hotkey_entry_item
 
@@ -249,20 +279,22 @@ def update_uvchannel_index(self,context):
 # b3d example GGET/SET
 # https://b3d.interplanety.org/en/dynamically-setting-the-max-and-min-values-%E2%80%8B%E2%80%8Bfor-a-custorm-property-in-the-blender-python-api/
 def get_uvchannels(self):
-    uv_channels = bpy.context.active_object.data.uv_layers
-    # # print(self.get('uvlb_uv_channel'))
-    # if self.get('uvlb_uv_channel',1) > len(uv_channels)-1:
-    #     print("1")
-    #     return self.get('uvlb_uv_channel')
-    # elif uv_channels.active_index+1 < self.get('uvlb_uv_channel'):
-    #     print("2")
-    #     return uv_channels.active_index +1
-    # elif self.get('uvlb_uv_channel',1) < uv_channels.active_index+1:
-    #     print("3")
-    #     return self.get('uvlb_uv_channel')
-    # else:
-    #     return 1
-    return self.get('uvlb_uv_channel', 1)
+    if bpy.context.active_object is not None:
+        uv_channels = bpy.context.active_object.data.uv_layers
+        # # print(self.get('uvlb_uv_channel'))
+        # if self.get('uvlb_uv_channel',1) > len(uv_channels)-1:
+        #     print("1")
+        #     return self.get('uvlb_uv_channel')
+        # elif uv_channels.active_index+1 < self.get('uvlb_uv_channel'):
+        #     print("2")
+        #     return uv_channels.active_index +1
+        # elif self.get('uvlb_uv_channel',1) < uv_channels.active_index+1:
+        #     print("3")
+        #     return self.get('uvlb_uv_channel')
+        # else:
+        #     return 1
+        return self.get('uvlb_uv_channel', 1)
+    return 0
 
 def set_uvchannels(self, value):
     uv_channels = bpy.context.active_object.data.uv_layers
@@ -299,9 +331,10 @@ def setConfig(self, context):
     customPath = getattr(context.scene, "uvlb_customPath", "")
     pathEnable = getattr(context.scene, "uvlb_pathEnable", False)
     winPath = getattr(addon_prefs, "uvlb_winPath", "")
+    importMethod = getattr(context.scene, "uvlb_importMethod")
     config = configparser.ConfigParser()
     configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), configFol + "/config.ini")
-    print("UVlayout-Bridge: %s // %s // %s" % (customPath, pathEnable, winPath))
+    # print("UVlayout-Bridge: %s // %s // %s" % (customPath, pathEnable, winPath))
     config.read(configPath)
     if not config.has_section("main"):
         config.add_section('main')
@@ -309,6 +342,7 @@ def setConfig(self, context):
     config.set('main', 'customPath', str(customPath))
     config.set('main', 'pathEnable', str(pathEnable))
     config.set('main', 'winPath', str(winPath))
+    config.set('main', 'importMethod', str(importMethod))
     with open(configPath, 'w') as configfile:
         config.write(configfile)
 
@@ -342,6 +376,7 @@ def getCustomPath():
     customPath = "Please set path"
     pathEnable = False
     winPath = "Please set Application Path"
+    importMethod = "0"
 
     config = SafeConfigParser()
     for path in bpy.utils.script_paths():
@@ -352,12 +387,14 @@ def getCustomPath():
                 customPath = config.get('main', 'customPath')
                 pathEnable = config.getboolean('main', 'pathEnable')
                 winPath = config.get('main', 'winPath')
+                importMethod = config.get('main', 'importMethod')
             except:
                 customPath = "Please set path"
                 pathEnable = False
                 winPath = "Please set Application Path"
+                importMethod = "0"
 
-    return (customPath, pathEnable, winPath)
+    return (customPath, pathEnable, winPath, importMethod)
 
 
 def updateIcon(self, context):
@@ -399,6 +436,7 @@ scn.uvlb_uv_channel = IntProperty(
     name = "Map",
     description = "Select a UV channel for editing in export. Shows UV channel when setting number for easy preview",
     default = 1,
+    min = 0,
     get=get_uvchannels, 
     set=set_uvchannels,
     # get=lambda self: get_uvchannels(self),
@@ -551,6 +589,15 @@ scn.forced_reimport = BoolProperty(
     default = False,
     description="Forces reimport of the out file from UVlayout. Sometimes import mismatches timing of UVlayout causing to not import proper output file.")
 
+scn.uvlb_importMethod = EnumProperty(
+    items = (
+        ('0', "Auto", 'Blender waits for the output file from Headus UVlayout. This causes Blender GUI to freeze since the operator keep waiting for a file to import.','FILE_REFRESH',0),
+        ('1', "Manual", 'With manual, user needs to manually press import to get output file from Headus UVlayout, Blender GUI is still responsive.','IMPORT',1),
+        ),
+    name = "Import Method",
+    description = "Use manual or automatic import method. With manual, user needs to press import, Blender GUI is still responsive vs automic where Blender waits for the output file from Headus UVlayout. This causes Blender GUI to freeze since the operator keep waiting for a file to import.",
+    default = getCustomPath()[3],
+    update = setConfig)
 
 def is_local(context):
     #for ob in bpy.context.scene.objects:
@@ -613,6 +660,10 @@ uvlObjs = []
 Objs = []
 
 def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs):
+    expObjs = []
+    expMeshes = []
+    uvlObjs = []
+    Objs = []
     # print("Import path: %s - File:%s" % (file_Name))
     # print("isosfile file_name: %s" % os.path.isfile(file_outName))
     # print("isosfile file_name == true: %s" % os.path.isfile(file_outName) == True)
@@ -633,7 +684,8 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
                                 )
 
         #bl 4.0
-        if bpy.app.version[0] == 4 and bpy.app.version[1] >= 0:
+        # if bpy.app.version[0] == 4 and bpy.app.version[1] >= 0:
+        if bpy.app.version[0] >= 4 and bpy.app.version[1] >= 0:
             bpy.ops.wm.obj_import(filepath = file_outName,
                                 forward_axis = 'Y',
                                 up_axis = 'Z',
@@ -677,10 +729,11 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
 
         bpy.ops.object.select_all(action='DESELECT')
 
+        print("uvlObjs %s" % uvlObjs)
         # print("REMOVE IMPORTED MESH")
         for ob in uvlObjs:
-            # print("remove ob UVL: %s" % ob.name)
-            # print("remove ob data UVL: %s" %  ob.data.name)
+            print("remove ob UVL: %s" % ob.name)
+            print("remove ob data UVL: %s" %  ob.data.name)
             #bpy.data.meshes.remove(ob.data,True)
             ## 2.80
             bpy.data.meshes.remove(ob.data, do_unlink=True)
@@ -702,9 +755,88 @@ def import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_ex
             bpy.ops.uv.seams_from_islands()
             bpy.ops.object.editmode_toggle()
 
+        scn.uvlb_manualImport = False
         return True
     else:
+        scn.uvlb_manualImport = True
         return False
+
+
+def sendToUVlayout(scn,file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs ):
+    print("Waiting for return file")
+    # time.sleep(5)
+    # print("Sleep 1 sec")
+
+    #-- SEND AUTOMATION COMMANDS ---
+    if (os.path.isfile(file_cmdName) == False) and scn.uvlb_autoComm:
+        if dropCom == 0:
+            time.sleep(0)
+            # print("Sleep 5")
+
+            print("Commands Send")
+            comm = ''
+            # Not used fo now
+            if scn.uvlb_autoCOMS == '1':
+                comm = 'run UVLayout|Pack|Pack All'
+            if scn.uvlb_autoCOMS == '2':
+                comm = 'auto'
+            # if scn.uvlb_autoCOMS == '1':
+            #     comm = 'drop \n run UVLayout|Pack|Pack All'
+            # if scn.uvlb_autoCOMS == '2':
+            #     comm = 'drop \n auto obj \ run UVLayout|Pack|Pack All'
+            # if scn.uvlb_autoCOMS == '3':
+            #     comm = 'drop \n auto dxf \ run UVLayout|Pack|Pack All'
+            # if scn.uvlb_autoCOMS == '4':
+            #     comm = 'drop \n auto obj \n auto dxf '
+            # if scn.uvlb_autoCOMS == '5':
+            #     comm = 'run UVLayout|Pack|Pack All'
+            # if scn.uvlb_autoCOMS == '6':
+            #     comm = 'drop \n auto obj \n auto dxf \n run UVLayout|Pack|Pack All'
+
+            # if scn.uvlb_autoPack:
+            #     comm = 'run UVLayout|Pack|Pack All'
+            
+            # if scn.uvlb_autoOptimize:
+            #     comm = 'auto'
+                # 2024-07-24d
+                # NOTE some settings in packing will cause error if set
+                # comm = 'run UVLayout|Auto|Pack\Pack All'
+                # comm = 'Auto obj'
+                # comm = 'Auto obj'
+#                comm = 'drop \ n auto obj'
+#                comm = "drop \ n auto obj \n auto eps \n auto dxf"
+#                comm = "drop \ n auto dxf"
+
+#                comm = 'run UVLayout|Pack|Pack All' + '\n' +'run UVLayout|Plugin|Save'
+#                comm = "Poly"
+#                comm = "drop \ n auto obj \n "
+            f = open(file_cmdName, "w+")
+#            print("Commands Sent: %s - %s" % (uvlb_mode, uvlb_uv_mode))
+            print("Command: %s" % comm)
+            f.write(''.join([comm]))
+            f.close()
+            dropCom = 1
+
+    #-- AUTO SAVE ACTION
+    if (os.path.isfile(file_cmdName) == False) and scn.uvlb_autoSave and scn.uvlb_autoComm:
+        comm = ''
+        time.sleep(2)
+#                if scn.uvlb_autoDRPS:
+        if dropCom == 0 or dropCom == 1:
+            comm = 'run UVLayout|Plugin|Save'
+            print("Command: %s" % comm)
+            f = open(file_cmdName, "w+")
+            f.write(''.join([comm]))
+            f.close()
+            dropCom = 2
+#            time.sleep(1)
+    # close command file
+#        time.sleep(3)
+
+    #-- IMPORT OBJ BACK TO BLENDER --
+    result = import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
+
+    return result
 
 #-- Headus uvLayout Export/Import --#
 def UVL_IO():
@@ -712,6 +844,10 @@ def UVL_IO():
 
     # reset forced reimport
     scn.forced_reimport = False
+    uvlb_data = scn.uvlb_data
+    uvlb_data.uvlb_manualImport = False
+    # setattr(scn, "uvlb_manualImport", False)
+    # scn.uvlb_manualImport = False
 
     expObjs = []
     expMeshes = []
@@ -874,7 +1010,7 @@ def UVL_IO():
     
     # bl 4.0
     # https://docs.blender.org/api/current/bpy.ops.wm.html#bpy.ops.wm.obj_export
-    if bpy.app.version[0] == 4 and bpy.app.version[1] >= 0:
+    if bpy.app.version[0] >= 4 and bpy.app.version[1] >= 0:
         bpy.ops.wm.obj_export(filepath=file_Name,
                                 check_existing = True,
                                 forward_axis = 'Y',
@@ -989,73 +1125,16 @@ def UVL_IO():
     result = False
     #---IMPORT---
     while not os.path.isfile(file_outName) and uvlayout_proc.poll() != 0:
-
-        #-- SEND AUTOMATION COMMANDS ---
-        if (os.path.isfile(file_cmdName) == False) and scn.uvlb_autoComm:
-            if dropCom == 0:
-                time.sleep(0)
-                print("Commands Send")
-                comm = ''
-                # Not used fo now
-                if scn.uvlb_autoCOMS == '1':
-                    comm = 'run UVLayout|Pack|Pack All'
-                if scn.uvlb_autoCOMS == '2':
-                    comm = 'auto'
-                # if scn.uvlb_autoCOMS == '1':
-                #     comm = 'drop \n run UVLayout|Pack|Pack All'
-                # if scn.uvlb_autoCOMS == '2':
-                #     comm = 'drop \n auto obj \ run UVLayout|Pack|Pack All'
-                # if scn.uvlb_autoCOMS == '3':
-                #     comm = 'drop \n auto dxf \ run UVLayout|Pack|Pack All'
-                # if scn.uvlb_autoCOMS == '4':
-                #     comm = 'drop \n auto obj \n auto dxf '
-                # if scn.uvlb_autoCOMS == '5':
-                #     comm = 'run UVLayout|Pack|Pack All'
-                # if scn.uvlb_autoCOMS == '6':
-                #     comm = 'drop \n auto obj \n auto dxf \n run UVLayout|Pack|Pack All'
-
-                # if scn.uvlb_autoPack:
-                #     comm = 'run UVLayout|Pack|Pack All'
-                
-                # if scn.uvlb_autoOptimize:
-                #     comm = 'auto'
-                    # 2024-07-24d
-                    # NOTE some settings in packing will cause error if set
-                    # comm = 'run UVLayout|Auto|Pack\Pack All'
-                    # comm = 'Auto obj'
-                    # comm = 'Auto obj'
-#                comm = 'drop \ n auto obj'
-#                comm = "drop \ n auto obj \n auto eps \n auto dxf"
-#                comm = "drop \ n auto dxf"
-
-#                comm = 'run UVLayout|Pack|Pack All' + '\n' +'run UVLayout|Plugin|Save'
-#                comm = "Poly"
-#                comm = "drop \ n auto obj \n "
-                f = open(file_cmdName, "w+")
-    #            print("Commands Sent: %s - %s" % (uvlb_mode, uvlb_uv_mode))
-                print("Command: %s" % comm)
-                f.write(''.join([comm]))
-                f.close()
-                dropCom = 1
-
-        #-- AUTO SAVE ACTION
-        if (os.path.isfile(file_cmdName) == False) and scn.uvlb_autoSave and scn.uvlb_autoComm:
-            comm = ''
-            time.sleep(2)
-#                if scn.uvlb_autoDRPS:
-            if dropCom == 0 or dropCom == 1:
-                comm = 'run UVLayout|Plugin|Save'
-                print("Command: %s" % comm)
-                f = open(file_cmdName, "w+")
-                f.write(''.join([comm]))
-                f.close()
-                dropCom = 2
-#            time.sleep(1)
-        # close command file
-#        time.sleep(3)
-
-        #-- IMPORT OBJ BACK TO BLENDER --
-        result = import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
+        print("scn.uvlb_importMethod %s" % scn.uvlb_importMethod)
+        if (scn.uvlb_importMethod== "0"):
+            print("Auto Import mode")
+            result = sendToUVlayout(scn, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
+        else:
+            print("Manual Import mode")
+            # scn.uvlb_manualImport = True
+            uvlb_data.uvlb_manualImport = True
+            # setattr(scn, "uvlb_manualImport", True)
+            return True #sendToUVlayout(scn, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
 
     while os.path.isfile(file_outName):
         time.sleep(1)
@@ -1067,13 +1146,25 @@ def UVL_IO():
             # print(file_outName)
             # print("TMP output exists - Headus perhaps still open")
             scn.forced_reimport = True
+            # scn.uvlb_manualImport = True
+            uvlb_data.uvlb_manualImport = True
+            print("Set uvlb_manualImport True after import")
+            # setattr(scn, "uvlb_manualImport", True)
         else:
             scn.forced_reimport = False
+            # scn.uvlb_manualImport = False
+            uvlb_data.uvlb_manualImport = False
+            print("Set uvlb_manualImport False checking file")
+            # setattr(scn, "uvlb_manualImport", False)
             # print(os.path.isfile(file_outName))
             # print(file_outName)
             # print("TMP output removed - Headus closed")
     else:
         scn.forced_reimport = False
+        # scn.uvlb_manualImport = False
+        uvlb_data.uvlb_manualImport = False
+        print("Set uvlb_manualImport False no outfile")
+        # setattr(scn, "uvlb_manualImport", False)
     
     print("## ALL DONE ##")
     return result
@@ -1160,6 +1251,7 @@ class UVLB_OT_Export(Operator):
 def UVL_forced_reimport(context):
     scn, addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
 
+    print("Forced import uvlObjs %s" % uvlObjs)
     #-- IMPORT OBJ BACK TO BLENDER --
     import_to_blender(file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs)
 
@@ -1180,12 +1272,14 @@ class UVLB_OT_Forced_Reimport(Operator):
         return os.path.isfile(file_outName) or scn.forced_reimport
 
     def execute(self, context):
+        scn = bpy.context.scene
         preferences = context.preferences
         addon_prefs = get_addon_prefs(context)
+        uvlb_data = scn.uvlb_data
 
-        scn = bpy.context.scene
         scn.spaceName = False
-
+        uvlb_data.uvlb_manualImport = False
+        
         #-- Run export eaction
         UVL_forced_reimport(context)
 
@@ -1298,6 +1392,8 @@ class VIEW3D_PT_panel_uvlbridge(UVLBRIDGE, Panel):
     bl_context = "objectmode"
     bl_options = {"DEFAULT_CLOSED"}
 
+    tab: EnumProperty(name = "Tab", default = "EXECUTE", items = helper_tabs_items)
+    
     @classmethod
     def poll(cls, context):
         # Only allow in Object mode and for a selected mesh.
@@ -1431,7 +1527,7 @@ def check_uv_channels(scn):
     #--Get selected objects---
     for ob in bpy.context.selected_objects:
         if ob.type == 'MESH':
-            if len(ob.data.uv_layers) > 1:
+            if len(ob.data.uv_layers) > 0:
                 return True
     return False
 
@@ -1476,20 +1572,36 @@ class VIEW3D_PT_export_options(UVLBRIDGE, Panel):
 def uvl_panel_operator(self,context):
     if app_path_set(context):
         layout = self.layout
+        scn = context.scene
+        uvlb_data = scn.uvlb_data
+        scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
+
         #-- START EXPORT --
         layout.scale_y = 1.25
         
         col = layout.column(align=True)
         row = col.row(align=True)
-        row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
-        row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
+        # print(not os.path.exists(file_outName))
+        # print("not uvlb_data.uvlb_manualImport %s" % (not uvlb_data.uvlb_manualImport))
+        if not os.path.exists(file_outName) and not uvlb_data.uvlb_manualImport:
+            row.operator("uvlb.export", text = "Unwrap in UVlayout", icon_value=custom_icons["uvl"].icon_id)
+            row.operator("uvlb.send_tmpedit", text = "", icon='FILE_TICK') # TEMP RECOVER_LAST LOOP_BACK
         
-        scn,addon_prefs, UVLayoutPath, file_Name,file_outName, file_setName, file_cmdName, uvl_exit_str, uvlObjs, Objs = get_path_files()
-        
-        if os.path.exists(file_outName):
+        # print("scn.uvlb_importMethod %s" % scn.uvlb_importMethod)
+        # print("not (scn.uvlb_importMethod) %s" % (scn.uvlb_importMethod != 0))
+        if os.path.exists(file_outName) and not (scn.uvlb_importMethod != "0"):
         # if os.path.isfile(file_outName):
             row = col.row(align=True)
             row.operator("uvlb.forced_reimport", icon='RECOVER_LAST') # RECOVER_LAST LOOP_BACK
+
+        # print(scn.uvlb_importMethod == "1" and uvlb_data.uvlb_manualImport)
+        # print("scn.uvlb_importMethod == 1 %s - scn.uvlb_importMethod %s - typeof %s" % (scn.uvlb_importMethod == 1, scn.uvlb_importMethod, type(scn.uvlb_importMethod)))
+        # print(uvlb_data.uvlb_manualImport)
+        if scn.uvlb_importMethod == "1" and uvlb_data.uvlb_manualImport: #os.path.exists(file_outName):
+            row = col.row(align=True)
+            row.operator("uvlb.forced_reimport", text = "Import UVlayut", icon_value=custom_icons["uvl"].icon_id)
+            row.operator("uvlb.refresh_manual_import", text = "", icon='FILE_REFRESH')
+        
 
 #-- ADDON PREFS --#
 class Blender2UVLayoutAddonPreferences(AddonPreferences):
@@ -1497,7 +1609,7 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
     bl_idname = __name__
 
     uvlb_winPath : StringProperty(
-        name="Path",
+        name="UVlayout Path",
         description = "Choose custom path to Headus UVlayout application",
         default = getCustomPath()[2],
         subtype = 'DIR_PATH',
@@ -1517,38 +1629,49 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         layout = self.layout
         scene = context.scene
 
+        # box=layout.box()
+        box=layout
+        box.label(text = "Settings:")
+        box.prop(scene, "uvlb_importMethod")
+        # box.separator()
+
         if platform == "win32":
-            box=layout.box()
+            # box=layout.box()
             split = box.split()
             col = split.column()
             col.alert = (self.uvlb_winPath == 'Please set Application Path')
-            col.label(text = "Application Path Headus UVLayout v2.")
-            col.prop(self, "uvlb_winPath", text="")
-            col.separator()
+            # col.label(text = "Application Path Headus UVLayout v2.")
+            col.prop(self, "uvlb_winPath") #@, text="")
+            # col.separator()
         if platform == "darwin":
-            box=layout.box()
+            # box=layout.box()
             split = box.split()
             col = split.column()
             col.alert = (self.versionUVL == 'Please choose version')
-            col.label(text = "Headus UVlayout Version:")
-            col.prop(self,"versionUVL", text="")
+            # col.label(text = "Headus UVlayout Version:")
+            col.prop(self,"versionUVL") #, text="")
             col.label(text = "* No application path settings needed on OSX")
 #            col.separator()
 
-        col.separator()
+        # col.separator()
         #-- CUSTOM EXPORT PATH --
-        expBut = layout.box()
+        # expBut = layout.box()
+        expBut = box.split()
+        col = expBut.column()
+        # column = expBut.column_flow(columns=2, align=False)
 
-        column = expBut.column()
-        column.row().label(text = "Custom export path:")
+        # column.label(text = "Custom export path:")
+        
+        # column = expBut.column()
+        col.prop(scene,"uvlb_pathEnable") #, text="")
+        
         if scene.uvlb_pathEnable:
-            row = column.row()
-            row.alert = not os.path.exists(scene.uvlb_customPath)
-            row.prop(scene,"uvlb_customPath", text="")
+            # row = column #.row()
+            # row.alert = not os.path.exists(scene.uvlb_customPath)
+            col.prop(scene,"uvlb_customPath") #, text="")
 
-        column = expBut.column()
-        column.row().prop(scene,"uvlb_pathEnable", text="")
 
+        # layout.separator()
         box=layout.box()
         split = box.split()
         col = split.column()
@@ -1572,7 +1695,8 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
 
         col.separator()
         km = kc.keymaps['3D View']
-        kmi = get_hotkey_entry_item(km, 'uvlayout.bridge', 'EXECUTE', 'tab')
+        # kmi = get_hotkey_entry_item(km, 'wm.call_panel', 'EXECUTE', 'tab')
+        kmi = get_hotkey_entry_item(km, 'wm.call_panel', 'VIEW3D_PT_panel_uvlbridge','VIEW3D_PT_panel_uvlbridge')
         if kmi:
             col.context_pointer_set("keymap", km)
             rna_keymap_ui.draw_kmi([], kc, km, kmi, col, 0)
@@ -1583,12 +1707,10 @@ class Blender2UVLayoutAddonPreferences(AddonPreferences):
         col.separator()
 
 
-
 class OBJECT_OT_b2uvl_addon_prefs(Operator):
     bl_idname = "object.b2uvl_addon_prefs"
     bl_label = "Addon Preferences"
     bl_options = {'REGISTER', 'UNDO'}
-
 
     def execute(self, context):
         if platform == "win32":
@@ -1601,6 +1723,7 @@ class OBJECT_OT_b2uvl_addon_prefs(Operator):
         print(info)
 
         return {'FINISHED'}
+
 
 def icon_Load():
     # importing icons
@@ -1619,6 +1742,34 @@ def icon_Load():
 # global variable to store icons in
 custom_icons = None
 
+class UVLB_PG_Data(PropertyGroup):
+    uvlb_manualImport : BoolProperty(
+        name="Manual Import",
+        default = False,
+        description = "Use manual or automatic import method. With manual, user needs to press import, Blender GUI is still responsive vs automic where Blender waits for the output file from Headus UVlayout. This causes Blender GUI to freeze since the operator keep waiting for a file to import."
+        )
+
+
+class UVLB_OT_refreshManualImport(Operator):
+    bl_idname = "uvlb.refresh_manual_import"
+    bl_label = "Refresh Manual Import"
+    bl_description = "If an error occcrs after sending file back, the panel can show a grayed out imort button. This refreshes the state and fixes GUI."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        scn = context.scene
+        return scn.uvlb_data.uvlb_manualImport
+
+    def execute(self, context):
+        scn = context.scene
+        if scn.uvlb_data.uvlb_manualImport:
+            scn.uvlb_data.uvlb_manualImport = False
+
+        self.report({'INFO'}, "Refresh Manual Import Done!")
+
+        return {'FINISHED'}
+
 
 addon_keymaps = []
 
@@ -1635,12 +1786,58 @@ classes = (
     VIEW3D_PT_export_options,
     Blender2UVLayoutAddonPreferences,
     OBJECT_OT_b2uvl_addon_prefs,
+    UVLB_OT_refreshManualImport,
+    UVLB_PG_Data,
     )
 
 
 def register():
+    scn = bpy.types.Scene
+    
+    
+    # def get_manualImport(self):
+    #     # scn = bpy.context.scene
+    #     # uvlb_manualImport = scn.uvlb_manualImport
+    #     # return scn.uvlb_manualImport
+    #     # print(self["uvlb_manualImport"])
+    #     # return self["uvlb_manualImport"]
+        
+    #     # return self.uvlb_manualImport
+    #     # causes RecursionError
+
+    #     # return self.get("uvlb_manualImport")
+    #     # print(self)
+    #     # return self
+    #     return self.uvlb_manualImport
+
+
+    # def set_manualImport(self, value):
+    #     scn = bpy.context.scene
+    #     # scn["uvlb_manualImport"] = value
+    #     # self["uvlb_manualImport"] = value
+    #     self.uvlb_manualImport = value
+    #     # scn.uvlb_manualImport = value
+
+    # def update_manualImport(self, value):
+    #     # scn = context.scene
+    #     # scn["uvlb_manualImport"] = True
+    #     print("Set uvlb_manualImport fromt update_maunalImport")
+    #     # scn.uvlb_manualImport = bool(value)
+    #     # returns an integer?!
+    #     # self = bool(value)
+
+    # scn.uvlb_manualImport = BoolProperty(
+    #     name="Manual Import",
+    #     # default = False,
+    #     default = False,
+    #     # get=get_manualImport, 
+    #     # set=set_manualImport,
+    #     # update=update_manualImport,
+    #     description = "Use manual or automatic import method. With manual, user needs to press import, Blender GUI is still responsive vs automic where Blender waits for the output file from Headus UVlayout. This causes Blender GUI to freeze since the operator keep waiting for a file to import.")
+    
     for cls in classes:
         bpy.utils.register_class(cls)
+    
     # add operator to bottom panel > work around for sub panel usage
     bpy.types.VIEW3D_PT_panel_uvlbridge.append(uvl_panel_operator)
 
@@ -1652,12 +1849,16 @@ def register():
     # Removed dialog operator, this is cleaner and eaier. No duplciate code
     kmi = km.keymap_items.new('wm.call_panel', 'V', 'PRESS',alt = True,shift=True)
     kmi.properties.name = 'VIEW3D_PT_panel_uvlbridge'
+    # kmi.properties.tab = "EXECUTE"
     
     kmi = km.keymap_items.new("uvlb.export", "V", "PRESS", shift = True)
     kmi.properties.tab = "EXECUTE"
+    # kmi.properties.idname = 'UVLB_OT_Export'
 
     addon_keymaps.append((km, kmi))
     icon_Load()
+
+    bpy.types.Scene.uvlb_data = PointerProperty(type=UVLB_PG_Data)
 
 
 
@@ -1667,6 +1868,8 @@ def unregister():
     bpy.utils.previews.remove(custom_icons)
 
     bpy.types.VIEW3D_PT_panel_uvlbridge.remove(uvl_panel_operator)
+    
+    del bpy.types.Scene.uvlb_data
 
     # handle the keymap
     for km, kmi in addon_keymaps:
